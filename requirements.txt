@@ -1,0 +1,8 @@
+invoke
+pytest
+requests
+semver
+sphinx ~= 3.5.2
+tox
+twine
+wheel

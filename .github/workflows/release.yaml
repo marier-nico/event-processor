@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}-${{ hashFiles('tox.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Write version to env
+        run: |
+          echo "new_event_processor_version=$(inv get-latest)" >> $GITHUB_ENV
+      - name: Update version file
+        run: echo "${{ env.new_event_processor_version }}" > VERSION
+      - name: Package
+        run: inv clean package
+      - name: Publish
+        env:
+          TWINE_REPOSITORY_URL: ${{ secrets.pypi_url }}
+          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+        run: inv publish
+      - name: Update version file in git
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git fetch
+          git checkout main
+          git add VERSION
+          git commit -m "Update version to ${{ env.new_event_processor_version }}"
+          git push -u origin main
