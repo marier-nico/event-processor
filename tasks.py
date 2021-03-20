@@ -7,7 +7,7 @@ CURRENT_DIR = os.path.dirname(__file__)
 
 @task
 def clean(c, docs=True, bytecode=False, tox=False, extra=""):
-    patterns = ["build", "dist", ".pytest_cache", "**/*.egg-info", ".mypy_cache"]
+    patterns = ["build", "dist", ".pytest_cache", "**/*.egg-info", ".mypy_cache", "htmlcov"]
     if docs:
         patterns.append("docs/_build")
     if bytecode:
