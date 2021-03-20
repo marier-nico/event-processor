@@ -7,8 +7,8 @@ Pre-Processors
 .. automodule:: pre_processors
    :members:
 
-Processor Decorator
--------------------
+Decorators
+----------
 
 .. automodule:: processor_decorator
    :members:
