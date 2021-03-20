@@ -1,10 +1,21 @@
+"""Contains functions used for invoking processors for events."""
 from typing import Dict, Any, Tuple, Optional
 
 from src.event_processor.state import PROCESSORS, Processor, DEPENDENCY_FACTORIES
 from src.event_processor.exceptions import EventProcessorInvocationException, EventProcessorDependencyException
 
 
-def invoke(event: Dict):
+def invoke(event: Dict) -> Any:
+    """Invoke an event processor for the given event.
+
+    The correct processor will automatically be selected based on the event, and its dependencies will be automatically
+    created and injected.
+
+    :param event: The raw event.
+    :return: The value returned by the processor.
+    :raises EventProcessorInvocationException: When no processor is found for the event.
+    :raises EventProcessorDependencyException: When a factory required by a processor was not registered.
+    """
     processor = find_processor_for_event(event)
     dependencies = get_dependencies_for_processor(processor)
 
@@ -12,6 +23,17 @@ def invoke(event: Dict):
 
 
 def find_processor_for_event(event: Dict) -> Processor:
+    """Find the processor that should process a given event.
+
+    To be selected, a processor's filters must all match the event. If multiple processors match the event, the
+    processor with more filters will be selected (which means the most specific processor will be used). When multiple
+    processors with the same number of filters match, the first one to have been registered will be used. This is
+    dependendant on Python's import system.
+
+    :param event: The raw event.
+    :return: The processor to call.
+    :raises EventProcessorInvocationException: When no processor is found for the event.
+    """
     longest_match, best_processor = -1, None
     for filters, processor in PROCESSORS.items():
         if len(filters) > longest_match and event_matches_filters(event, filters):
@@ -24,6 +46,15 @@ def find_processor_for_event(event: Dict) -> Processor:
 
 
 def event_matches_filters(event: Dict, filters: Tuple[Tuple[str, Any], ...]) -> bool:
+    """Verify that an event matches a set of filters.
+
+    If the value in a filter is :py:class:`typing.Any`, any value in the event will be accepted, regardless of what it
+    is, as long as it exists at the filter's path.
+
+    :param event: The raw event.
+    :param filters: The filters to check on the event.
+    :return: True when the filters match the event, False otherwise.
+    """
     for path, value in filters:
 
         current_value: Optional[Dict] = event
@@ -40,6 +71,14 @@ def event_matches_filters(event: Dict, filters: Tuple[Tuple[str, Any], ...]) -> 
 
 
 def get_dependencies_for_processor(processor: Processor) -> Tuple[Any, ...]:
+    """Create the dependencies for a processor.
+
+    Simply create an instance for each dependency by passing the dependency names to the factory and storing the result.
+
+    :param processor: The processor to create dependencies for.
+    :return: A tuple of all the dependencies.
+    :raises EventProcessorDependencyException: When a dependency factory does not exist.
+    """
     dependencies = []
     for dependency_factory_name, dependency_names in processor.dependencies.items():
 

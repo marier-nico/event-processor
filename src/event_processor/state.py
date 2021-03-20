@@ -1,9 +1,15 @@
+"""Hold the state for event processors.
+
+The state is made up of the currently registered processors and dependency factories.
+"""
 from typing import Dict, Tuple, Any, Callable
 from dataclasses import dataclass
 
 
 @dataclass
 class Processor:
+    """Represent a registered processor."""
+
     fn: Callable
     pre_processor: Callable
     dependencies: Dict[str, Tuple[str, ...]]

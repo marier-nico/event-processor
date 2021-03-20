@@ -55,7 +55,7 @@ def processor(filter_expr: Dict[str, Any], pre_processor: Callable[[Dict], Any] 
     :param filter_expr: A dict containing path-value pairs to call the right event processor.
     :param pre_processor: A pre-processor function to transform the event into another type.
     :param kwargs: A mapping of dependency-factory to tuple of dependencies for that factory.
-    :raises ProcessorException: When the filter expression is already associated to a handler.
+    :raises EventProcessorDecorationException: When the filter expression is already associated to a handler.
     """
 
     def decorate(fn):
@@ -78,8 +78,8 @@ def dependency_factory(fn: Callable):
     Also, the function must take a single string parameter and return a dependency based on that.
 
     :param fn: The function that will act as a factory.
-    :raises ProcessorException: When a factory is already registered for that name.
-    :raises ProcessorException: When the decorated function does not have a single argument.
+    :raises EventProcessorDecorationException: When a factory is already registered for that name.
+    :raises EventProcessorDecorationException: When the decorated function does not have a single argument.
     """
     factory_name = fn.__code__.co_name
     if factory_name in DEPENDENCY_FACTORIES.keys():
