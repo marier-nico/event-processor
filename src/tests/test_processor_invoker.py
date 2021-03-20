@@ -173,12 +173,66 @@ def test_get_dependencies_for_processor_creates_dependencies():
 @patch(f"{MOD_PATH}.find_processor_for_event")
 def test_invoke_gets_processor_and_dependencies_and_calls_processor(find_processor_mock, get_dependencies_mock):
     event = {"key": "value"}
-    processor_mock = MagicMock()
-    find_processor_mock.return_value = processor_mock
-
-    invoke(event)
-
-    processor_mock.pre_processor.assert_called_once_with(event)
-    processor_mock.fn.asert_called_once_with(
-        processor_mock.pre_processor.return_value, *get_dependencies_mock.return_value
+    fn_return_mock = MagicMock()
+    pre_processor_return_mock = MagicMock()
+    test_processor = Processor(
+        fn=lambda x: (fn_return_mock, x),
+        pre_processor=lambda _: pre_processor_return_mock,
+        dependencies={},
     )
+    find_processor_mock.return_value = test_processor
+
+    fn_return, pre_processor_return = invoke(event)
+
+    find_processor_mock.assert_called_once_with(event)
+    get_dependencies_mock.assert_called_once_with(test_processor)
+    assert fn_return is fn_return_mock
+    assert pre_processor_return is pre_processor_return_mock
+
+
+@patch(f"{MOD_PATH}.get_dependencies_for_processor", MagicMock())
+@patch(f"{MOD_PATH}.find_processor_for_event")
+def test_invoke_raises_for_pre_processor_with_bad_arg_count(find_processor_mock):
+    event = {"key": "value"}
+    test_processor = Processor(fn=lambda _: None, pre_processor=lambda: None, dependencies={})
+    find_processor_mock.return_value = test_processor
+
+    with pytest.raises(EventProcessorDependencyException):
+        invoke(event)
+
+
+@patch(f"{MOD_PATH}.get_dependencies_for_processor", MagicMock())
+@patch(f"{MOD_PATH}.find_processor_for_event")
+def test_invoke_raises_for_processor_with_bad_arg_count(find_processor_mock):
+    event = {"key": "value"}
+    test_processor = Processor(fn=lambda: None, pre_processor=lambda _: None, dependencies={})
+    find_processor_mock.return_value = test_processor
+
+    with pytest.raises(EventProcessorDependencyException):
+        invoke(event)
+
+
+@patch(f"{MOD_PATH}.get_dependencies_for_processor", MagicMock(return_value=("dep",)))
+@patch(f"{MOD_PATH}.find_processor_for_event")
+def test_invoke_passes_dependencies_to_processor(find_processor_mock):
+    event = {"key": "value"}
+    test_processor = Processor(fn=lambda _, dependency: dependency, pre_processor=lambda _: None, dependencies={})
+    find_processor_mock.return_value = test_processor
+
+    dep = invoke(event)
+
+    assert dep == "dep"
+
+
+@patch(f"{MOD_PATH}.get_dependencies_for_processor", MagicMock(return_value=("dep",)))
+@patch(f"{MOD_PATH}.find_processor_for_event")
+def test_invoke_passes_dependencies_to_pre_processor(find_processor_mock):
+    event = {"key": "value"}
+    test_processor = Processor(
+        fn=lambda pre_processor_dep: pre_processor_dep, pre_processor=lambda _, dependency: dependency, dependencies={}
+    )
+    find_processor_mock.return_value = test_processor
+
+    dep = invoke(event)
+
+    assert dep == "dep"

@@ -15,11 +15,26 @@ def invoke(event: Dict) -> Any:
     :return: The value returned by the processor.
     :raises EventProcessorInvocationException: When no processor is found for the event.
     :raises EventProcessorDependencyException: When a factory required by a processor was not registered.
+    :raises EventProcessorDependencyException: When the processor does not accept the right number of args.
+    :raises EventProcessorDependencyException: When the pre-processor does not accept the right number of args.
     """
     processor = find_processor_for_event(event)
     dependencies = get_dependencies_for_processor(processor)
 
-    return processor.fn(processor.pre_processor(event), *dependencies)
+    acceptable_number_of_args = {1, 1 + len(dependencies)}
+    if processor.pre_processor.__code__.co_argcount not in acceptable_number_of_args:
+        raise EventProcessorDependencyException(
+            "Wrong number of arguments for pre-processor", processor.pre_processor, processor.dependencies
+        )
+    if processor.fn.__code__.co_argcount not in acceptable_number_of_args:
+        raise EventProcessorDependencyException(
+            "Wrong number of arguments for processor", processor.fn, processor.dependencies
+        )
+
+    processor_dependencies = dependencies if processor.fn.__code__.co_argcount != 1 else ()
+    pre_processor_dependencies = dependencies if processor.pre_processor.__code__.co_argcount != 1 else ()
+
+    return processor.fn(processor.pre_processor(event, *pre_processor_dependencies), *processor_dependencies)
 
 
 def find_processor_for_event(event: Dict) -> Processor:
