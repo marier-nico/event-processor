@@ -43,5 +43,5 @@ jobs:
           git fetch
           git checkout main
           git add VERSION
-          git commit -m "Update version to ${{ env.new_event_processor_version }}"
+          git commit -m "Update version to ${{ env.new_event_processor_version }}" || echo "Nothing to commit"
           git push -u origin main
