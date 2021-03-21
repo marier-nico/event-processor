@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 project_root = os.path.dirname(os.path.realpath(__file__))
 with open(f"{project_root}/VERSION", "r") as version_file:
     version = version_file.readline().strip()
-with open(f"{project_root}/README.rst", "r") as readme_file:
+with open(f"{project_root}/README.md", "r") as readme_file:
     readme = readme_file.read()
 
 setup(
