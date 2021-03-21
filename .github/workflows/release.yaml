@@ -34,9 +34,8 @@ jobs:
         run: inv clean package
       - name: Publish
         env:
-          TWINE_REPOSITORY_URL: ${{ secrets.pypi_url }}
           TWINE_PASSWORD: ${{ secrets.pypi_token }}
-        run: inv publish
+        run: inv publish --pypi-url="${{ secrets.pypi_url }}"
       - name: Update version file in git
         run: |
           git config user.email "actions@github.com"
