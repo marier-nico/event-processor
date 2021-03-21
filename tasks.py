@@ -1,5 +1,4 @@
 import os
-import requests
 from invoke import task
 
 CURRENT_DIR = os.path.dirname(__file__)
@@ -28,6 +27,12 @@ def build(c, docs=False):
 
 
 @task
+def test(c):
+    c.run("pytest -v --cov=src/event_processor/ --cov-fail-under=100 --cov-report html src/tests")
+    c.run("cd docs && make doctest && cd ..")
+
+
+@task
 def package(c):
     c.run("python setup.py sdist bdist_wheel")
 
@@ -48,5 +53,6 @@ def publish(c, token="", pypi_url="https://test.pypi.org/legacy/"):
 
 @task
 def get_latest(_c):
+    import requests
     resp = requests.get("https://api.github.com/repos/marier-nico/event-processor/releases/latest").json()
     print(resp["tag_name"], end="")

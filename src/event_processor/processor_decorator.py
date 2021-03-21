@@ -1,8 +1,8 @@
 from typing import Dict, Callable, Any
 
-from src.event_processor.exceptions import EventProcessorDecorationException
-from src.event_processor.pre_processors import passthrough
-from src.event_processor.state import PROCESSORS, Processor, DEPENDENCY_FACTORIES
+from .exceptions import EventProcessorDecorationException
+from .pre_processors import passthrough
+from .state import PROCESSORS, Processor, DEPENDENCY_FACTORIES
 
 
 def processor(filter_expr: Dict[str, Any], pre_processor: Callable[[Dict], Any] = passthrough, **kwargs):

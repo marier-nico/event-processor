@@ -12,7 +12,7 @@ You can use the following decorators:
 - :py:func:`event_processor.processor`
 - :py:func:`event_processor.dependency_factory`
 
-.. code-block:: python
+.. testcode::
 
     from event_processor import processor, dependency_factory
 
@@ -26,7 +26,7 @@ You can use the following functions:
 - :py:func:`event_processor.invoke`
 - :py:func:`event_processor.passthrough`
 
-.. code-block:: python
+.. testcode::
 
     from event_processor import invoke, passthrough
 
@@ -42,7 +42,7 @@ You can use the following exceptions:
 - :py:class:`event_processor.EventProcessorInvocationException`
 - :py:class:`event_processor.EventProcessorDecorationException`
 
-.. code-block:: python
+.. testcode::
 
     from event_processor import (
         EventProcessorException,

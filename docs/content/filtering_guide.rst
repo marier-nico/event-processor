@@ -10,14 +10,22 @@ General Usage
 Filters are just python dictionaries that you need to pass to the decorator when decorating processors. Here's an
 example:
 
-.. code-block:: python
+.. testcode::
 
-    from event_processor import processor
+    from typing import Any, Dict
+
+    from event_processor import processor, invoke, EventProcessorInvocationException
 
 
     @processor({"top.mid.low": "nice", "top.other": Any})
     def my_processor(event: Dict):
-        pass
+        return True
+
+    print(invoke({"top": {"mid": {"low": "nice"}, "other": 1234}}))
+
+.. testoutput::
+
+    True
 
 You can specify any number of filters in the decorator, but there is an implicit AND between them, so ALL the filters
 need to match a particular event for your processor to be called.

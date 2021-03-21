@@ -21,7 +21,7 @@
                    )
         role = response["Item"]["Role"]["S"]
 
-        return Usesr(email=email, role=role)
+        return User(email=email, role=role)
 
 .. code-block:: python
     :caption: processor

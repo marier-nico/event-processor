@@ -14,14 +14,23 @@ setup(
     author="Nicolas Marier",
     author_email="software@nmarier.com",
     url="https://github.com/marier-nico/event-processor",
-    description="Process input events",
+    project_urls={
+        "Documentation": "https://event-processor.readthedocs.io/en/latest/",
+        "Source": "https://github.com/marier-nico/event-processor",
+        "Tracker": "https://github.com/marier-nico/event-processor/issues"
+    },
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "Programming Language :: Python",
+        "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
+    keywords="event decorators development",
 
     # Packages and depencies
     package_dir={"": "src"},

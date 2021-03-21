@@ -1,8 +1,8 @@
 """Contains functions used for invoking processors for events."""
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 
-from src.event_processor.state import PROCESSORS, Processor, DEPENDENCY_FACTORIES
-from src.event_processor.exceptions import EventProcessorInvocationException, EventProcessorDependencyException
+from .exceptions import EventProcessorInvocationException, EventProcessorDependencyException
+from .state import PROCESSORS, Processor, DEPENDENCY_FACTORIES
 
 
 def invoke(event: Dict) -> Any:
@@ -72,12 +72,12 @@ def event_matches_filters(event: Dict, filters: Tuple[Tuple[str, Any], ...]) -> 
     """
     for path, value in filters:
 
-        current_value: Optional[Dict] = event
+        current_value = event
         for path_component in path.split("."):
-            if current_value is None:
+            try:
+                current_value = current_value[path_component]
+            except (TypeError, KeyError):
                 return False
-
-            current_value = current_value.get(path_component)
 
         if value is not Any and current_value != value:
             return False
