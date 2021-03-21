@@ -79,6 +79,24 @@ def test_event_matches_filters_with_empty_filters_always_matches():
     assert result is True
 
 
+def test_event_does_not_match_any_filter_with_bad_key():
+    event = {"key_1": "value"}
+    filters = (("key", Any),)
+
+    result = event_matches_filters(event, filters)
+
+    assert result is False
+
+
+def test_event_does_not_match_any_filter_with_bad_nested_key():
+    event = {"key": {"deeper_1": "asdf"}}
+    filters = (("key.deepern't", Any),)
+
+    result = event_matches_filters(event, filters)
+
+    assert result is False
+
+
 @patch.dict(f"{MOD_PATH}.PROCESSORS", clear=True)
 def test_find_handler_for_event_finds_handler():
     event = {"key": "value"}

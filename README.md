@@ -8,12 +8,17 @@
 event-processor is a library that aims to simplify the common pattern of event processing. It simplifies the process of
 filtering, dispatching and pre-processing events as well as injecting dependencies in event processors.
 
-The only requirement is that your events are regular python dictionaries.
+The only requirement is that your events are regular python dictionaries. Python 3.7+ is supported.
 
 Here's a very basic example of simple event filtering and dispatching. This is as simple as it gets, just calling the
 right processor depending on the event:
 
 ```python
+from typing import Dict
+
+from event_processor import processor, invoke
+
+
 @processor({"service.type": "service_a"})
 def process_service_a(event: Dict):
     return event["service"]["status"] == "up"

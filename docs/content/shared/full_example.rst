@@ -21,12 +21,14 @@
                    )
         role = response["Item"]["Role"]["S"]
 
-        return Usesr(email=email, role=role)
+        return User(email=email, role=role)
 
 .. code-block:: python
     :caption: processor
 
     from typing import Any
+
+    from event_processor import processor
 
 
     # Does not use the dynamodb client, but needs it for pre-processing
@@ -42,6 +44,7 @@
     :caption: dependency-factory
 
     import boto3
+    from event_processor import dependency_factory
 
 
     @dependency_factory

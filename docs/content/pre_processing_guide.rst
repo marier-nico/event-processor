@@ -11,10 +11,13 @@ Structural Pre-Processing
 One use of pre-processors is to change the structure of input events to make them more convenient to manipulate for
 processors. For example, you could turn an input event into a dataclass:
 
-.. code-block:: python
+.. testcode::
 
     from dataclasses import dataclass
-    from typing import Any
+    from typing import Any, Dict
+
+    from event_processor import processor, invoke
+
 
     @dataclass
     class User:
@@ -37,6 +40,15 @@ processors. For example, you could turn an input event into a dataclass:
     def my_processor(user: User):  # The processor takes a User
         return user.role == "admin"
 
+    print(
+        invoke({"user": {"name": "John", "email": "john@example.com", "role": "admin"}}),
+        invoke({"user": {"name": "Bob", "email": "bob@example.com", "role": "user"}}),
+    )
+
+.. testoutput::
+
+    True False
+
 Data Pre-Processing
 -------------------
 
@@ -44,22 +56,61 @@ Another use of pre-processors is to fetch additional external data from, realist
 This can also be combined with dependencies to create dynamic pre-processors that can fetch data from external sources.
 Here's an example:
 
-.. code-block:: python
+.. testcode::
 
-    # Assuming the same User class as the previous example
+    from event_processor import processor, dependency_factory
 
-    def event_to_user(event: Dict, db_client) -> User:
-        email = event["user"]["email"]
-        user = db_client.fetch_user_by_email(email=email)
+
+    @dataclass
+    class User:
+        name: str
+        email: str
+        role: str
+
+
+    class FakeDbClient:
+        database = {
+            "admin@example.com": {"role": "admin", "name": "John"},
+            "user@example.com": {"role": "user", "name": "Bob"}
+        }
+
+        def fetch_by_email(self, email: str) -> User:
+            user = self.database.get(email, {})
+            return User(
+                name=user["name"],
+                email=email,
+                role=user["role"]
+            )
+
+
+    def event_to_user(event: Dict, db_client: FakeDbClient) -> User:
+        email = event["user"]["email_3"]
+        user = db_client.fetch_by_email(email=email)
         return user
 
+
+    @dependency_factory
+    def db_client(_name: str) -> FakeDbClient:
+        return FakeDbClient()
+
+
     @processor(
-        {"user.email": Any},
+        {"user.email_3": Any},
         pre_processor=event_to_user,
         db_client=("my_db",)
     )
     def my_processor(user: User):
         return user.role == "admin"
+
+
+    print(
+        invoke({"user": {"email_3": "user@example.com"}}),
+        invoke({"user": {"email_3": "admin@example.com"}})
+    )
+
+.. testoutput::
+
+    False True
 
 For more details on dependency injection, see the :ref:`Dependency Injection Guide`. The gist is that you can specify
 dependencies in the decorator, and they will automatically be injected into either the processor, pre-processor, or

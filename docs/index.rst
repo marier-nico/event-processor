@@ -16,7 +16,12 @@ Simple Filtering
 
 This is as simple as it gets, just calling the right processor depending on the event.
 
-.. code-block:: python
+.. testcode::
+
+    from typing import Dict
+
+    from event_processor import processor, invoke
+
 
     @processor({"service.type": "service_a"})
     def process_service_a(event: Dict):
@@ -24,7 +29,7 @@ This is as simple as it gets, just calling the right processor depending on the 
 
     @processor({"service.type": "service_b"})
     def process_service_b(event: Dict):
-        return event["authorized"]
+        return event["service"]["authorized"]
 
     service_a_event = {
         "service": {
@@ -38,8 +43,12 @@ This is as simple as it gets, just calling the right processor depending on the 
             "authorized": False
         }
     }
-    invoke(service_a_event)  # False
-    invoke(service_b_event)  # False
+
+    print(invoke(service_a_event), invoke(service_b_event))
+
+.. testoutput::
+
+    False False
 
 Any Filter
 ----------
@@ -47,16 +56,24 @@ Any Filter
 Sometimes you want to make sure there's a value at a given path in the event, but you don't care what it is, or you may
 want to dynamically do things with it in the processor.
 
-.. code-block:: python
+.. testcode::
 
-    from typing import Any
+    from typing import Any, Dict
+
+    from event_processor import processor, invoke
 
     @processor({"user.email": Any})
     def process_user(event: Dict):
         return event["user"]["email"] == "admin@example.com"
 
-    invoke({"user": {"email": "admin@example.com"}})  # True
-    invoke({"user": {"email": "not-admin@example.com"}})  # False
+    print(
+        invoke({"user": {"email": "admin@example.com"}}),
+        invoke({"user": {"email": "not-admin@example.com"}})
+    )
+
+.. testoutput::
+
+    True False
 
 Pre-Processing
 --------------
@@ -64,14 +81,17 @@ Pre-Processing
 It can be convenient to to work with actual python objects rather than raw dictionaries, so you can use pre-processors
 for processors.
 
-.. code-block:: python
+.. testcode::
 
     from dataclasses import dataclass
-    from typing import Any
+    from typing import Any, Dict
+
+    from event_processor import processor, invoke
+
 
     database = {
         "user@example.com": {"role": "user"},
-        "admin@example.com": {"role": "admin}
+        "admin@example.com": {"role": "admin"}
     }
 
     @dataclass
@@ -80,13 +100,23 @@ for processors.
         role: str
 
     def event_to_user(event: Dict):
-        email = event["user"]["email"]
+        email = event["user"]["email_1"]
         role = database.get(email, {}).get("role")
         return User(email=email, role=role)
 
-    @processor({"user.email": Any}, pre_processor=event_to_user)
+    @processor({"user.email_1": Any}, pre_processor=event_to_user)
     def process_user(user: User):
         return user.role == "admin"
+
+    print(
+        invoke({"user": {"email_1": "user@example.com"}}),
+        invoke({"user": {"email_1": "admin@example.com"}})
+    )
+
+.. testoutput::
+
+    False True
+
 
 Dependency Injection
 --------------------
@@ -94,23 +124,48 @@ Dependency Injection
 Sometimes, you might want to call external services from a processor, so you can have your dependencies automatically
 injected.
 
-.. code-block:: python
+.. testcode::
 
-    import boto3
     from typing import Any
 
-    @dependency_factory
-    def boto3_clients(client_name: str) -> boto3.client:
-        boto3.client(client_name)
+    from event_processor import dependency_factory, processor, invoke
 
-    @processor({"user.email": Any}, boto3_clients=("ssm",))
-    def process_user(event: Dict, ssm_client: boto3.client):
+
+    class FakeBotoClient:
+        parameters = {"admin_email": "admin@example.com"}
+
+        def get_parameter(self, Name=""):
+            return {"Parameter": {"Value": self.parameters.get(Name)}}
+
+    @dependency_factory
+    def boto3_clients(client_name: str):
+        if client_name == "ssm":
+            return FakeBotoClient()
+        else:
+            raise NotImplementedError()
+
+    @processor({"user.email_2": Any}, boto3_clients=("ssm",))
+    def process_user(event: Dict, ssm_client: FakeBotoClient):
         ssm_response = ssm_client.get_parameter(Name="admin_email")
         admin_email = ssm_response["Parameter"]["Value"]
-        return event["user"]["email"] == admin_email
+        return event["user"]["email_2"] == admin_email
+
+    print(
+        invoke({"user": {"email_2": "admin@example.com"}}),
+        invoke({"user": {"email_2": "user@example.com"}})
+    )
+
+.. testoutput::
+
+    True False
 
 Documentation
 -------------
+
+.. toctree::
+   :hidden:
+
+   self
 
 .. toctree::
    :maxdepth: 2
@@ -120,6 +175,7 @@ Documentation
    content/pre_processing_guide
    content/dependency_injection_guide
    content/testing_processors
+   content/public_api
    content/code
 
 Changelog
