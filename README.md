@@ -14,28 +14,28 @@ Here's a very basic example of simple event filtering and dispatching. This is a
 right processor depending on the event:
 
 ```python
-    @processor({"service.type": "service_a"})
-    def process_service_a(event: Dict):
-        return event["service"]["status"] == "up"
+@processor({"service.type": "service_a"})
+def process_service_a(event: Dict):
+    return event["service"]["status"] == "up"
 
-    @processor({"service.type": "service_b"})
-    def process_service_b(event: Dict):
-        return event["authorized"]
+@processor({"service.type": "service_b"})
+def process_service_b(event: Dict):
+    return event["authorized"]
 
-    service_a_event = {
-        "service": {
-            "type": "service_a",
-            "status": "down"
-        }
+service_a_event = {
+    "service": {
+        "type": "service_a",
+        "status": "down"
     }
-    service_b_event = {
-        "service": {
-            "type": "service_b",
-            "authorized": False
-        }
+}
+service_b_event = {
+    "service": {
+        "type": "service_b",
+        "authorized": False
     }
-    invoke(service_a_event)  # False
-    invoke(service_b_event)  # False
+}
+invoke(service_a_event)  # False
+invoke(service_b_event)  # False
 ```
 
 # Documentation
