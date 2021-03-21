@@ -5,7 +5,7 @@ Process Events In Style
 .. image:: https://img.shields.io/github/languages/code-size/marier-nico/event-processor
 .. image:: https://img.shields.io/codecov/c/github/marier-nico/event-processor?token=RELUVFBJHX
 
-event-processor is a library that aims to simplif the common pattern of event processing. It simplifies the process of
+event-processor is a library that aims to simplify the common pattern of event processing. It simplifies the process of
 filtering, dispatching and pre-processing events as well as injecting dependencies in event processors.
 
 The only requirement is that your events are regular python dictionaries.
