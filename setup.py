@@ -16,7 +16,7 @@ setup(
     url="https://github.com/marier-nico/event-processor",
     description="Process input events",
     long_description=readme,
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown",
     classifiers=[
         "Intended Audience :: Developers",
         "Programming Language :: Python",
