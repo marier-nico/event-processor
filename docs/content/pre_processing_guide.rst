@@ -16,6 +16,9 @@ processors. For example, you could turn an input event into a dataclass:
     from dataclasses import dataclass
     from typing import Any
 
+    from event_processor import processor
+
+
     @dataclass
     class User:
         name: str
@@ -47,6 +50,7 @@ Here's an example:
 .. code-block:: python
 
     # Assuming the same User class as the previous example
+    from event_processor import processor
 
     def event_to_user(event: Dict, db_client) -> User:
         email = event["user"]["email"]

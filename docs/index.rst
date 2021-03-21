@@ -18,6 +18,11 @@ This is as simple as it gets, just calling the right processor depending on the 
 
 .. code-block:: python
 
+    from typing import Dict
+
+    from event_processor import processor, invoke
+
+
     @processor({"service.type": "service_a"})
     def process_service_a(event: Dict):
         return event["service"]["status"] == "up"
@@ -51,6 +56,8 @@ want to dynamically do things with it in the processor.
 
     from typing import Any
 
+    from event_processor import processor, invoke
+
     @processor({"user.email": Any})
     def process_user(event: Dict):
         return event["user"]["email"] == "admin@example.com"
@@ -68,6 +75,9 @@ for processors.
 
     from dataclasses import dataclass
     from typing import Any
+
+    from event_processor import processor
+
 
     database = {
         "user@example.com": {"role": "user"},
@@ -96,8 +106,11 @@ injected.
 
 .. code-block:: python
 
-    import boto3
     from typing import Any
+
+    import boto3
+    from event_processor import dependency_factory, processor
+
 
     @dependency_factory
     def boto3_clients(client_name: str) -> boto3.client:
@@ -113,6 +126,11 @@ Documentation
 -------------
 
 .. toctree::
+   :hidden:
+
+   self
+
+.. toctree::
    :maxdepth: 2
    :caption: Contents:
 
@@ -120,6 +138,7 @@ Documentation
    content/pre_processing_guide
    content/dependency_injection_guide
    content/testing_processors
+   content/public_api
    content/code
 
 Changelog

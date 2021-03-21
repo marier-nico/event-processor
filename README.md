@@ -14,6 +14,11 @@ Here's a very basic example of simple event filtering and dispatching. This is a
 right processor depending on the event:
 
 ```python
+from typing import Dict
+
+from event_processor import processor, invoke
+
+
 @processor({"service.type": "service_a"})
 def process_service_a(event: Dict):
     return event["service"]["status"] == "up"

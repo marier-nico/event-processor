@@ -12,6 +12,9 @@ example:
 
 .. code-block:: python
 
+    from event_processor import processor
+
+
     @processor({"top.mid.low": "nice", "top.other": Any})
     def my_processor(event: Dict):
         pass

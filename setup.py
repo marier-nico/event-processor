@@ -25,7 +25,7 @@ setup(
 
     # Packages and depencies
     package_dir={"": "src"},
-    packages=find_packages("event_processor"),
+    packages=find_packages(where="src"),
     install_requires=[],
     extras_require={},
     package_data={"": ["VERSION"]},
