@@ -1,7 +1,7 @@
 Process Events In Style
 =======================
 
-This library aims to simplif the common pattern of event processing. It simplifies the process of filtering,
+This library aims to simplify the common pattern of event processing. It simplifies the process of filtering,
 dispatching and pre-processing events as well as injecting dependencies in event processors.
 
 The only requirement is that your events are regular python dictionaries.

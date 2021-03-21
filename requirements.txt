@@ -4,6 +4,7 @@ pytest-cov
 requests
 semver
 sphinx ~= 3.5.2
+sphinx-rtd-theme
 tox
 twine
 wheel
