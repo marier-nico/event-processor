@@ -19,6 +19,7 @@ setup(
         "Source": "https://github.com/marier-nico/event-processor",
         "Tracker": "https://github.com/marier-nico/event-processor/issues"
     },
+    description="Pythonic event-processing library based on decorators",
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
