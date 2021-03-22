@@ -18,17 +18,17 @@ class EventProcessor:
     def processor(self, filter_expr: Dict[str, Any], pre_processor: Callable[[Dict], Any] = passthrough, **kwargs):
         """Decorate event processors.
 
-        Filter expressions are used to determine when a given processor should be called. A processor will be called when
-        a specific value is found at a given path in the input event. The key for filter expressions should be a
+        Filter expressions are used to determine when a given processor should be called. A processor will be called
+        when a specific value is found at a given path in the input event. The key for filter expressions should be a
         dot-separated string to reach different levels of nesting in the input event. For example, the filter expression
         ``{"top.middle.lower": "val"}`` will match the event ``{"top": {"middle": {"lower": "val"}}}``.
 
         **Filter Values**
 
-        - Basic Python type: The processor will be invoked if the value in the filter is equal to the value at the path \
-            given by the filter key, in the input event.
-        - typing.Any: The processor will be invoked if a value exists at the path given by the filter key (regardless of \
-            what it is).
+        - Basic Python type: The processor will be invoked if the value in the filter is equal to the value at the \
+            path given by the filter key, in the input event.
+        - typing.Any: The processor will be invoked if a value exists at the path given by the filter key (regardless \
+            of what it is).
 
         **Default Processor**
 
@@ -36,10 +36,10 @@ class EventProcessor:
         dict, and the processor will act as a fallback to call any time other processors do not match. This is important
         if you want default processing, because otherwise an exception is raised when no processor is found.
 
-        Pre-processors are just functions that will transform the input event. By default, no transformation occurs, so the
-        input event is directly passed through to the processor, but it's possible to do anything with them. For example,
-        create an instance of a dataclass. In that case, the processor will not be called with the input event, it will be
-        passed the output of the pre-processor.
+        Pre-processors are just functions that will transform the input event. By default, no transformation occurs, so
+        the input event is directly passed through to the processor, but it's possible to do anything with them. For
+        example, create an instance of a dataclass. In that case, the processor will not be called with the input event,
+        it will be passed the output of the pre-processor.
 
         The additional keyword arguments are used to specify dependencies to be injected into the processor's arguments.
         The format should be ``<dependency_factory_name>=(<client_name1>, <client_name2>)``. The dependency factory name
@@ -104,8 +104,8 @@ class EventProcessor:
     def invoke(self, event: Dict) -> Any:
         """Invoke an event processor for the given event.
 
-        The correct processor will automatically be selected based on the event, and its dependencies will be automatically
-        created and injected.
+        The correct processor will automatically be selected based on the event, and its dependencies will be
+        automatically created and injected.
 
         :param event: The raw event.
         :return: The value returned by the processor.
@@ -136,9 +136,9 @@ class EventProcessor:
         """Find the processor that should process a given event.
 
         To be selected, a processor's filters must all match the event. If multiple processors match the event, the
-        processor with more filters will be selected (which means the most specific processor will be used). When multiple
-        processors with the same number of filters match, the first one to have been registered will be used. This is
-        dependendant on Python's import system.
+        processor with more filters will be selected (which means the most specific processor will be used). When
+        multiple processors with the same number of filters match, the first one to have been registered will be used.
+        This is dependendant on Python's import system.
 
         :param event: The raw event.
         :return: The processor to call.
@@ -158,8 +158,8 @@ class EventProcessor:
     def _event_matches_filters(event: Dict, filters: Tuple[Tuple[str, Any], ...]) -> bool:
         """Verify that an event matches a set of filters.
 
-        If the value in a filter is :py:class:`typing.Any`, any value in the event will be accepted, regardless of what it
-        is, as long as it exists at the filter's path.
+        If the value in a filter is :py:class:`typing.Any`, any value in the event will be accepted, regardless of what
+        it is, as long as it exists at the filter's path.
 
         :param event: The raw event.
         :param filters: The filters to check on the event.
@@ -182,7 +182,8 @@ class EventProcessor:
     def _get_dependencies_for_processor(self, processor: Processor) -> Tuple[Any, ...]:
         """Create the dependencies for a processor.
 
-        Simply create an instance for each dependency by passing the dependency names to the factory and storing the result.
+        Simply create an instance for each dependency by passing the dependency names to the factory and storing the
+        result.
 
         :param processor: The processor to create dependencies for.
         :return: A tuple of all the dependencies.
