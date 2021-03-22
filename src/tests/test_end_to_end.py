@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.event_processor.state import PROCESSORS, DEPENDENCY_FACTORIES
-from src.event_processor.processor_decorator import processor, dependency_factory
+from src.event_processor.processor import PROCESSORS, DEPENDENCY_FACTORIES
+from src.event_processor.event_processor import processor, dependency_factory
 from src.event_processor.processor_invoker import invoke
 
 

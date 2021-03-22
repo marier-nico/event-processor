@@ -3,9 +3,9 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from src.event_processor.state import Processor
+from src.event_processor.processor import Processor
 from src.event_processor.exceptions import EventProcessorInvocationException, EventProcessorDependencyException
-from src.event_processor.processor_decorator import processor, dependency_factory
+from src.event_processor.event_processor import processor, dependency_factory
 from src.event_processor.processor_invoker import (
     event_matches_filters,
     find_processor_for_event,

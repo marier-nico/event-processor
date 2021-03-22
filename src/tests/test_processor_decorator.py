@@ -2,10 +2,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.event_processor.processor_decorator import processor
+from src.event_processor.event_processor import processor
 from src.event_processor.exceptions import EventProcessorException
-from src.event_processor.processor_decorator import dependency_factory
-from src.event_processor.state import PROCESSORS, DEPENDENCY_FACTORIES
+from src.event_processor.event_processor import dependency_factory
+from src.event_processor.processor import PROCESSORS, DEPENDENCY_FACTORIES
 
 MOD_PATH = "src.event_processor.processor_decorator"
 
