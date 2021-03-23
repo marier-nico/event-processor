@@ -17,9 +17,9 @@ Suppose that we have the following functions we want to test:
 We could write the following tests:
 
 .. code-block:: python
-    :caption: tests.py
 
     from unittest.mock import MagicMock, patch
+
 
     def test_my_processor_returns_true_for_admin_user():
         test_user = User(email="test@example.com", role="admin")
@@ -27,6 +27,7 @@ We could write the following tests:
         result = my_processor(test_user)
 
         assert result is True
+
 
     def test_event_to_user_returns_user_data_from_dynamodb():
         dynamodb_client = MagicMock()
@@ -42,14 +43,15 @@ We could write the following tests:
         assert result.role == "mock-value"
         dynamodb_client.get_item.assert_called_once()
 
-    @patch("path.to.your.factory.boto3")
-    def test_boto_clients_creates_boto_client(boto3_mock):
+
+    @patch(FakeDynamoClient)
+    def test_boto_clients_creates_boto_client(dynamo_client_mock):
         test_client_name = "mock-value"
 
         result = boto_clients(test_client_name)
 
-        assert result == boto3_mock.client.return_value
-        boto3_mock.assert_called_once_with(test_client_name)
+        assert result == dynamo_client_mock.return_value
+
 
 As you can see, the dependency injection makes the processor and pre-processor easy to test, and it makes those tests
 clearer by avoiding excessive patching. Patching *is* needed to test the dependency factory, but since that's the only

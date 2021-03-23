@@ -15,6 +15,8 @@ import sys
 
 project_root = os.path.dirname(os.path.realpath(__file__)) + "/.."
 sys.path.insert(0, f"{project_root}")
+sys.path.insert(0, f"{project_root}/..")
+sys.path.insert(0, f"{project_root}/src")
 sys.path.insert(0, f"{project_root}/src/event_processor")
 doctest_path = [f"{project_root}/src"]
 

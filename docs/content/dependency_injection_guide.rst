@@ -12,13 +12,13 @@ Overview
 
 At its core, this library expects factory functions to exist for those clients (either made by you or not). These
 factories are used to create client instances, which will be forwarded to processors or pre-processors. You should use
-the :py:func:`processor_decorator.dependency_factory` decorator to register factory functions.
+the :py:meth:`EventProcessor.dependency_factory` decorator to register factory functions.
 
 Registering Dependency Factories
 --------------------------------
 
 Only factories that have been previously registered can be used in the processor decorator. Those factories should be
-registered with the :py:func:`processor_decorator.dependency_factory` decorator. Factories are just functions that take
+registered with the :py:meth:`EventProcessor.dependency_factory` decorator. Factories are just functions that take
 a single string argument (the client or SDK name) and return an instance of the client or SDK.
 
 Combining Dependencies and Pre-Processors
@@ -40,11 +40,10 @@ For processors and pre-processors, the first parameter will always be the event 
 other parameters will be dependencies. Do note that processors and pre-processors can either take no dependencies or all
 depencies, they cannot only take a few dependencies.
 
-
 Full Example
 ------------
 
-An especially convenient use-case for dependency injection is the boto AWS client. You can use boto clients in your
-processors like this:
+An especially convenient use-case for dependency injection is the AWS boto3 client. The following example gives an idea
+for how you could use dependency injection to work with boto3 clients.
 
 .. include:: shared/full_example.rst
