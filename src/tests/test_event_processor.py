@@ -9,6 +9,7 @@ from src.event_processor.exceptions import (
     EventProcessorDecorationException,
     EventProcessorInvocationException,
     EventProcessorDependencyException,
+    EventProcessorSubprocessorException,
 )
 
 MOD_PATH = "src.event_processor.event_processor"
@@ -64,6 +65,84 @@ def test_processor_does_not_raise_for_different_filters_that_overlap(event_proce
         pass
 
     assert len(event_processor.processors) == 2
+
+
+def test_add_subprocessor_adds_subprocessors_to_main_processor(event_processor):
+    subprocessor = EventProcessor()
+
+    @subprocessor.processor({"key": "value"})
+    def a_test(_event):
+        pass
+
+    event_processor.add_subprocessor(subprocessor)
+
+    assert len(event_processor.processors) == 1
+
+
+def test_add_subprocessor_adds_dependency_factories_to_main_processor(event_processor):
+    subprocessor = EventProcessor()
+
+    @subprocessor.dependency_factory
+    def some_factory(_client_name):
+        pass
+
+    event_processor.add_subprocessor(subprocessor)
+
+    assert len(event_processor.dependency_factories) == 1
+
+
+def test_add_subprocessor_raises_for_duplicate_filters(event_processor):
+    subprocessor = EventProcessor()
+
+    @event_processor.processor({"key": "value"})
+    def a_test(_event):
+        pass
+
+    @subprocessor.processor({"key": "value"})
+    def b_test(_event):
+        pass
+
+    with pytest.raises(EventProcessorSubprocessorException):
+        event_processor.add_subprocessor(subprocessor)
+
+
+def test_add_subprocessor_raises_for_duplicate_filters_with_some_non_overlapping_processors(event_processor):
+    subprocessor = EventProcessor()
+
+    @event_processor.processor({"key": "value"})
+    def a_test(_event):
+        pass
+
+    @event_processor.processor({"key": "value1"})
+    def b_test(_event):
+        pass
+
+    @subprocessor.processor({"key": "value"})
+    def c_test(_event):
+        pass
+
+    @subprocessor.processor({"key": "value2"})
+    def c_test(_event):
+        pass
+
+    with pytest.raises(EventProcessorSubprocessorException):
+        event_processor.add_subprocessor(subprocessor)
+
+
+def test_add_subprocessor_does_not_add_existing_factories_to_main_processor(event_processor):
+    subprocessor = EventProcessor()
+
+    @event_processor.dependency_factory
+    def some_factory(_dependency_name):
+        pass
+
+    @subprocessor.dependency_factory
+    def some_factory(_dependency_name):
+        pass
+
+    event_processor.add_subprocessor(subprocessor)
+
+    assert len(event_processor.dependency_factories) == 1
 
 
 def test_processor_raises_for_identical_filters_in_a_different_order(event_processor):

@@ -3,6 +3,7 @@ from src.event_processor.exceptions import (
     EventProcessorDecorationException,
     EventProcessorInvocationException,
     EventProcessorDependencyException,
+    EventProcessorSubprocessorException,
 )
 
 
@@ -40,3 +41,12 @@ def test_event_processor_dependency_exception():
     assert "Some message" in exc_repr
     assert "lambda" in exc_repr
     assert "factory" in exc.dependencies
+
+
+def test_event_processor_subprocessor_exception():
+    exc = EventProcessorSubprocessorException("Some messsage", {"a", "b"})
+
+    exc_repr = str(exc)
+
+    assert "a" in exc_repr
+    assert "b" in exc_repr
