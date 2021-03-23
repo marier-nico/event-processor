@@ -36,12 +36,14 @@ jobs:
         env:
           TWINE_PASSWORD: ${{ secrets.pypi_token }}
         run: inv publish --pypi-url="${{ secrets.pypi_url }}"
-      - name: Update version file in git
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git fetch
-          git checkout main
-          git add VERSION
-          git commit -m "Update version to ${{ env.new_event_processor_version }}" || echo "Nothing to commit"
-          git push -u origin main
+      - name: Open VERSION bump PR
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: Update version to ${{ env.new_event_processor_version }}
+          committer: GitHub Actions <actions@github.com>
+          author: GitHub Actions <actions@github.com>
+          branch: bump-version/${{ env.new_event_processor_version }}
+          delete-branch: true
+          base: main
+          title: Update VERSION to ${{ env.new_event_processor_version }}
+          body: A new version of the project has been released, so the `VERSION` file should be updated accordingly.
