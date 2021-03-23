@@ -16,7 +16,10 @@ processors. For example, you could turn an input event into a dataclass:
     from dataclasses import dataclass
     from typing import Any, Dict
 
-    from event_processor import processor, invoke
+    from event_processor import EventProcessor
+
+
+    event_processor = EventProcessor()
 
 
     @dataclass
@@ -33,7 +36,7 @@ processors. For example, you could turn an input event into a dataclass:
             role=user["role"]
         )
 
-    @processor(
+    @event_processor.processor(
         {"user.name": Any, "user.email": Any, "user.role": Any},
         pre_processor=event_to_user
     )
@@ -41,8 +44,8 @@ processors. For example, you could turn an input event into a dataclass:
         return user.role == "admin"
 
     print(
-        invoke({"user": {"name": "John", "email": "john@example.com", "role": "admin"}}),
-        invoke({"user": {"name": "Bob", "email": "bob@example.com", "role": "user"}}),
+        event_processor.invoke({"user": {"name": "John", "email": "john@example.com", "role": "admin"}}),
+        event_processor.invoke({"user": {"name": "Bob", "email": "bob@example.com", "role": "user"}}),
     )
 
 .. testoutput::
@@ -58,7 +61,10 @@ Here's an example:
 
 .. testcode::
 
-    from event_processor import processor, dependency_factory
+    from event_processor import EventProcessor
+
+
+    event_processor = EventProcessor()
 
 
     @dataclass
@@ -89,12 +95,12 @@ Here's an example:
         return user
 
 
-    @dependency_factory
+    @event_processor.dependency_factory
     def db_client(_name: str) -> FakeDbClient:
         return FakeDbClient()
 
 
-    @processor(
+    @event_processor.processor(
         {"user.email_3": Any},
         pre_processor=event_to_user,
         db_client=("my_db",)
@@ -104,8 +110,8 @@ Here's an example:
 
 
     print(
-        invoke({"user": {"email_3": "user@example.com"}}),
-        invoke({"user": {"email_3": "admin@example.com"}})
+        event_processor.invoke({"user": {"email_3": "user@example.com"}}),
+        event_processor.invoke({"user": {"email_3": "admin@example.com"}})
     )
 
 .. testoutput::

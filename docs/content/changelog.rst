@@ -1,1 +1,2 @@
+- v1.0.0: Move the state and decorators inside a class
 - v0.0.1: Initial release
