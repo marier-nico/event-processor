@@ -164,3 +164,59 @@ injected.
 .. testoutput::
 
     True False
+
+Bigger Apps & Modules
+---------------------
+
+All these examples have assumed everything happens in a single file, which is not the case for most application. So if
+your application is a bit more substantial and you want to split it up into modules, this is how you do it.
+
+.. note::
+
+   This example does not feature dependency factories, but it works the same way. You can simply add factories to
+   subprocessors and they will automatically get added to the main processor when you call ``add_subprocessor`` on it.
+   Also, if a factory with a given name already exists in the main processor, it will not be added again, so if you have
+   multiple factories with the same name, but different behavior, the one in the main processor will be used.
+
+.. code-block:: python
+   :caption: my_processor.py
+
+   from event_processor import EventProcessor
+
+
+   event_processor = EventProcessor()
+
+
+   @event_processor.processor({"key": "value"})
+   def my_processor(event):
+      return event["key"]
+
+.. code-block:: python
+   :caption: main.py
+
+   from event_processor import EventProcessor
+
+   from src.my_processor import event_processor as my_processor
+
+
+   main_processor = EventProcessor()
+   main_processor.add_subprocessor(my_processor)
+
+
+   def main(event):
+      print(main_processor.invoke(event))
+
+.. code-block::
+
+   >>> main({"key": "value"})
+   value
+
+
+The idea here is to define isolated processors in python submodules (as seen in ``my_processor.py``) and to import those
+processors back into the main module, to add them as subprocessors to the main processor. You can add as many
+subprocessors as you want, but there can be no overlap in filter expressions, just like if you were always using the
+same event processor.
+
+This is unfortunately required because of the way Python imports work. It would not be possible to instead import the
+main procesor from submodules, because then since nothing would import the submodules, the processors would never be
+registered.

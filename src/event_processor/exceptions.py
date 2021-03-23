@@ -1,5 +1,5 @@
 """Exceptions for event processor."""
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple, Set
 
 
 class EventProcessorException(BaseException):
@@ -54,6 +54,20 @@ class EventProcessorDependencyException(EventProcessorException):
 
     def __repr__(self):
         return f"Dependency error in function '{self.wrapped_fn.__code__.co_name}': {self.msg}"
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class EventProcessorSubprocessorException(EventProcessorException):
+    """Exception for failures in subprocessor management."""
+
+    def __init__(self, msg: str, overlap: Set):
+        super().__init__(msg)
+        self.overlap = overlap
+
+    def __repr__(self):
+        return f"Subprocesor error (overlap in processor and subprocessor events): {self.overlap}"
 
     def __str__(self):
         return self.__repr__()

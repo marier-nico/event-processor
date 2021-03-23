@@ -3,5 +3,6 @@ from .exceptions import (  # noqa
     EventProcessorDependencyException,
     EventProcessorInvocationException,
     EventProcessorDecorationException,
+    EventProcessorSubprocessorException,
 )
 from .event_processor import EventProcessor  # noqa

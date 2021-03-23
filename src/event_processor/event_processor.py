@@ -5,6 +5,7 @@ from .exceptions import (
     EventProcessorDecorationException,
     EventProcessorDependencyException,
     EventProcessorInvocationException,
+    EventProcessorSubprocessorException,
 )
 from .pre_processors import passthrough
 from .processor import Processor
@@ -14,6 +15,28 @@ class EventProcessor:
     def __init__(self):
         self.processors: Dict[Tuple[Tuple[str, Any], ...], Processor] = dict()
         self.dependency_factories: Dict[str, Callable] = dict()
+
+    def add_subprocessor(self, subprocessor: "EventProcessor"):
+        """Add a subprocessor for events.
+
+        This will update the current event processor with all the processors of the subprocesor, which means that
+        invoking the main processor with an event will have the same effect as invoking the correct subprocessor.
+
+        Note that filters defined in subprocessors must not already exist in the main processor, otherwise an error
+        will be raised.
+
+        :param subprocessor: The subprocessor to add to the current processor.
+        :raises EventProcessorSubprocessorException: When there is an overlap in filter expressions between the
+            processor and subprocessor.
+        """
+        intersection = set(self.processors.keys()).intersection(subprocessor.processors.keys())
+        if intersection != set():
+            raise EventProcessorSubprocessorException("Overlap in subprocessor events", intersection)
+
+        self.processors.update(subprocessor.processors)
+        for factory_name, factory_fn in subprocessor.dependency_factories.items():
+            if factory_name not in self.dependency_factories:
+                self.dependency_factories[factory_name] = factory_fn
 
     def processor(self, filter_expr: Dict[str, Any], pre_processor: Callable[[Dict], Any] = passthrough, **kwargs):
         """Decorate event processors.
