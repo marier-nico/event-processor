@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from event_processor.dependencies import Depends, resolve, get_required_dependencies, call_with_injection
+from src.event_processor.dependencies import Depends, resolve, get_required_dependencies, call_with_injection
 
 
 def test_depends_init_sets_values():

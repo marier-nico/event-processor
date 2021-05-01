@@ -63,12 +63,13 @@ def resolve(dependency: Depends, cache: Optional[dict] = None) -> Tuple[Optional
         return cache[dependency]
 
     cacheable = dependency.cache
+    resolved_dependencies = {}
     required_dependencies = get_required_dependencies(dependency.callable)
     for arg_name, required_dependency in required_dependencies.items():
-        required_dependencies[arg_name], cacheable_dep = resolve(required_dependency, cache)
+        resolved_dependencies[arg_name], cacheable_dep = resolve(required_dependency, cache)
         cacheable = cacheable and cacheable_dep
 
-    value = dependency.callable(**required_dependencies)
+    value = dependency.callable(**resolved_dependencies)
 
     if cache is not None and cacheable:
         cache[dependency] = value
