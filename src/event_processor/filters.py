@@ -15,6 +15,10 @@ class Filter(ABC):
         """
 
     @abstractmethod
+    def __hash__(self):
+        """Hash a filter for storage in a dict or set."""
+
+    @abstractmethod
     def __eq__(self, other) -> bool:
         """Test if two filters are equal.
 
@@ -54,6 +58,9 @@ class Accept(Filter):
     def matches(self, _event: dict) -> bool:
         return True
 
+    def __hash__(self):
+        return hash(self.__class__)
+
     def __eq__(self, other) -> bool:
         return isinstance(other, self.__class__)
 
@@ -73,6 +80,9 @@ class Exists(Filter):
                 return False
 
         return True
+
+    def __hash__(self):
+        return hash((self.__class__, self.path))
 
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
@@ -97,6 +107,9 @@ class Eq(Filter):
 
         return False
 
+    def __hash__(self):
+        return hash((self.__class__, (self.path, self.value)))
+
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
             return self.path == other.path and self.value == other.value
@@ -111,6 +124,9 @@ class And(Filter):
 
     def matches(self, event: dict) -> bool:
         return all(filter_.matches(event) for filter_ in self.filters)
+
+    def __hash__(self):
+        return hash((self.__class__, self.filters))
 
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
@@ -128,6 +144,9 @@ class Or(Filter):
 
     def matches(self, event: dict) -> bool:
         return any(filter_.matches(event) for filter_ in self.filters)
+
+    def __hash__(self):
+        return hash((self.__class__, self.filters))
 
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):

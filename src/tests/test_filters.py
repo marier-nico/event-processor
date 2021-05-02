@@ -68,6 +68,12 @@ def test_accept_filter_is_not_equal_to_other_object():
     assert a_filter != b_filter
 
 
+def test_accept_filter_hash_returns_class_hash():
+    filter_ = Accept()
+
+    assert hash(filter_) == hash(filter_.__class__)
+
+
 def test_exists_filter_matches_event_with_existing_top_level_value():
     test_filter = Exists("top-level")
 
@@ -111,6 +117,12 @@ def test_exists_filter_is_not_equal_to_different_path():
     b_filter = Exists("b")
 
     assert a_filter != b_filter
+
+
+def test_exists_filter_hash_is_path_hash():
+    filter_ = Exists("a")
+
+    assert hash(filter_) == hash((Exists, "a"))
 
 
 def test_eq_filter_matches_equal_top_level_value():
@@ -173,6 +185,12 @@ def test_eq_filter_is_not_equal_to_different_value():
     assert a_filter != b_filter
 
 
+def test_eq_filter_hash_hashes_path_and_value():
+    filter_ = Eq("a", 0)
+
+    assert hash(filter_) == hash((Eq, ("a", 0)))
+
+
 def test_and_filter_matches_when_all_filters_match():
     test_filter = And(Exists("a"), Exists("b"), Eq("c", "d"))
 
@@ -229,6 +247,15 @@ def test_and_filter_is_not_equal_when_other_is_not_a_filter():
     assert a_filter != 0
 
 
+def test_and_filter_hash_is_hash_of_all_sub_filters():
+    a_filter = Exists("a")
+    b_filter = Exists("b")
+
+    and_hash = hash(And(a_filter, b_filter))
+
+    assert and_hash == hash((And, (a_filter, b_filter)))
+
+
 def test_or_filter_matches_when_one_filter_matches():
     test_filter = Or(Exists("a"), Eq("", "y"), Exists("0"))
 
@@ -283,3 +310,12 @@ def test_or_filter_is_not_equal_when_other_is_not_a_filter():
     a_filter = Or(Mock())
 
     assert a_filter != 0
+
+
+def test_or_filter_hash_is_hash_of_all_sub_filters():
+    a_filter = Exists("a")
+    b_filter = Exists("b")
+
+    or_hash = hash(Or(a_filter, b_filter))
+
+    assert or_hash == hash((Or, (a_filter, b_filter)))
