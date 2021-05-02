@@ -14,6 +14,23 @@ class Filter(ABC):
         :return: True if the event matches, False otherwise
         """
 
+    @abstractmethod
+    def __eq__(self, other) -> bool:
+        """Test if two filters are equal.
+
+        :param other: The other filter to test
+        :return: True if the filters are equal, False otherwise
+        """
+
+    def __ne__(self, other) -> bool:
+        """Test if two filters are different.
+
+        :param other: The other filter to test
+        :return: True if the filters are different, False otherwise
+        """
+
+        return not (self == other)
+
     def __and__(self, other: "Filter") -> "Filter":
         """Combine two filters with a logical AND between them.
 
@@ -37,6 +54,9 @@ class Accept(Filter):
     def matches(self, _event: dict) -> bool:
         return True
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, self.__class__)
+
 
 class Exists(Filter):
     """Accept event where a given key exists."""
@@ -53,6 +73,11 @@ class Exists(Filter):
                 return False
 
         return True
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            return self.path == other.path
+        return False
 
 
 class Eq(Filter):
@@ -72,6 +97,11 @@ class Eq(Filter):
 
         return False
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            return self.path == other.path and self.value == other.value
+        return False
+
 
 class And(Filter):
     """Accept events that get accepted by all specified filters."""
@@ -82,6 +112,13 @@ class And(Filter):
     def matches(self, event: dict) -> bool:
         return all(filter_.matches(event) for filter_ in self.filters)
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            self_in_other = all(filter_ in other.filters for filter_ in self.filters)
+            other_in_self = all(filter_ in self.filters for filter_ in other.filters)
+            return self_in_other and other_in_self
+        return False
+
 
 class Or(Filter):
     """Accept events that get accepted by at least one specified filter."""
@@ -91,3 +128,10 @@ class Or(Filter):
 
     def matches(self, event: dict) -> bool:
         return any(filter_.matches(event) for filter_ in self.filters)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            self_in_other = all(filter_ in other.filters for filter_ in self.filters)
+            other_in_self = all(filter_ in self.filters for filter_ in other.filters)
+            return self_in_other and other_in_self
+        return False

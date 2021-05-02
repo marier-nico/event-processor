@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from src.event_processor.filters import Exists, Accept, Eq, And, Or
@@ -52,6 +54,20 @@ def test_accept_filter_matches_any_event(event):
     assert result is True
 
 
+def test_accept_filter_is_equal_to_other_accept_filters():
+    a_filter = Accept()
+    b_filter = Accept()
+
+    assert a_filter == b_filter
+
+
+def test_accept_filter_is_not_equal_to_other_object():
+    a_filter = Accept()
+    b_filter = 3
+
+    assert a_filter != b_filter
+
+
 def test_exists_filter_matches_event_with_existing_top_level_value():
     test_filter = Exists("top-level")
 
@@ -74,6 +90,27 @@ def test_exists_filter_does_not_match_empty_event():
     result = test_filter.matches({})
 
     assert result is False
+
+
+def test_exists_filter_is_equal_to_other_exists_filter_with_the_same_path():
+    a_filter = Exists("a")
+    b_filter = Exists("a")
+
+    assert a_filter == b_filter
+
+
+def test_exists_filter_is_not_equal_to_other_types():
+    a_filter = Exists("a")
+    b_filter = 0
+
+    assert a_filter != b_filter
+
+
+def test_exists_filter_is_not_equal_to_different_path():
+    a_filter = Exists("a")
+    b_filter = Exists("b")
+
+    assert a_filter != b_filter
 
 
 def test_eq_filter_matches_equal_top_level_value():
@@ -108,6 +145,34 @@ def test_eq_filter_does_not_match_nonexistent_key():
     assert result is False
 
 
+def test_eq_filter_is_equal_to_other_exists_filter_with_the_same_path_and_same_value():
+    a_filter = Eq("a", 0)
+    b_filter = Eq("a", 0)
+
+    assert a_filter == b_filter
+
+
+def test_eq_filter_is_not_equal_to_other_types():
+    a_filter = Eq("a", 0)
+    b_filter = 0
+
+    assert a_filter != b_filter
+
+
+def test_eq_filter_is_not_equal_to_different_path():
+    a_filter = Eq("a", 0)
+    b_filter = Eq("b", 0)
+
+    assert a_filter != b_filter
+
+
+def test_eq_filter_is_not_equal_to_different_value():
+    a_filter = Eq("a", 0)
+    b_filter = Eq("a", 1)
+
+    assert a_filter != b_filter
+
+
 def test_and_filter_matches_when_all_filters_match():
     test_filter = And(Exists("a"), Exists("b"), Eq("c", "d"))
 
@@ -132,6 +197,38 @@ def test_and_filter_does_not_match_when_one_filter_does_not_match():
     assert result is False
 
 
+def test_and_filter_is_equal_when_sub_filters_are_equal():
+    a_filter = Mock()
+    a_filter.__eq__ = lambda _, x: x is a_filter
+    b_filter = Mock()
+    b_filter.__eq__ = lambda _, x: x is b_filter
+
+    and_filter_1 = And(a_filter, b_filter)
+    and_filter_2 = And(b_filter, a_filter)
+
+    assert and_filter_1 == and_filter_2
+
+
+def test_and_filter_is_not_equal_when_sub_filters_are_different():
+    a_filter = Mock()
+    a_filter.__eq__ = lambda _, x: x is a_filter
+    b_filter = Mock()
+    b_filter.__eq__ = lambda _, x: x is b_filter
+
+    and_filter_1 = And(a_filter, b_filter)
+    and_filter_2 = And(b_filter)
+    and_filter_3 = And(a_filter)
+
+    assert and_filter_1 != and_filter_2
+    assert and_filter_2 != and_filter_3
+
+
+def test_and_filter_is_not_equal_when_other_is_not_a_filter():
+    a_filter = And(Mock())
+
+    assert a_filter != 0
+
+
 def test_or_filter_matches_when_one_filter_matches():
     test_filter = Or(Exists("a"), Eq("", "y"), Exists("0"))
 
@@ -154,3 +251,35 @@ def test_or_filter_does_not_match_when_no_filters_match():
     result = test_filter.matches({"x": "not-y"})
 
     assert result is False
+
+
+def test_or_filter_is_equal_when_sub_filters_are_equal():
+    a_filter = Mock()
+    a_filter.__eq__ = lambda _, x: x is a_filter
+    b_filter = Mock()
+    b_filter.__eq__ = lambda _, x: x is b_filter
+
+    or_filter_1 = Or(a_filter, b_filter)
+    or_filter_2 = Or(b_filter, a_filter)
+
+    assert or_filter_1 == or_filter_2
+
+
+def test_or_filter_is_not_equal_when_sub_filters_are_different():
+    a_filter = Mock()
+    a_filter.__eq__ = lambda _, x: x is a_filter
+    b_filter = Mock()
+    b_filter.__eq__ = lambda _, x: x is b_filter
+
+    or_filter_1 = Or(a_filter, b_filter)
+    or_filter_2 = Or(b_filter)
+    or_filter_3 = Or(a_filter)
+
+    assert or_filter_1 != or_filter_2
+    assert or_filter_2 != or_filter_3
+
+
+def test_or_filter_is_not_equal_when_other_is_not_a_filter():
+    a_filter = Or(Mock())
+
+    assert a_filter != 0
