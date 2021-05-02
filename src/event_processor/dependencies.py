@@ -1,6 +1,11 @@
 """Dependency injection and management facilities."""
 import inspect
-from typing import Callable, Any, Optional, Dict, Tuple
+from typing import Callable, Any, Optional, Dict, Tuple, List
+
+
+class Event(dict):
+    def __init__(self, dict_event: dict):
+        super().__init__(dict_event)
 
 
 class Depends:
@@ -28,13 +33,16 @@ class Depends:
         return hash((self.callable, self.cache))
 
 
-def call_with_injection(callable_: Callable, cache: Optional[dict] = None, *args, **kwargs) -> Optional[Any]:
+def call_with_injection(
+    callable_: Callable, event: Optional[Event] = None, cache: Optional[dict] = None, *args, **kwargs
+) -> Optional[Any]:
     """Call a callable and inject required dependencies.
 
     Note that keyword args that have the same name as the parameter used for a dependency will be overwritten with the
     dependency's injected value.
 
     :param callable_: The callable to call
+    :param event: The event for the current invocation
     :param cache: The dependency cache to use
     :param args: The args to pass to the callable
     :param kwargs: The kwargs to pass to the callable
@@ -42,12 +50,15 @@ def call_with_injection(callable_: Callable, cache: Optional[dict] = None, *args
     """
     dependencies = get_required_dependencies(callable_)
     for arg_name, dependency in dependencies.items():
-        kwargs[arg_name], cacheable = resolve(dependency, cache)
+        kwargs[arg_name], cacheable = resolve(dependency, cache=cache)
+    kwargs.update({arg_name: event for arg_name in get_event_dependencies(callable_)})
 
     return callable_(*args, **kwargs)
 
 
-def resolve(dependency: Depends, cache: Optional[dict] = None) -> Tuple[Optional[Any], bool]:
+def resolve(
+    dependency: Depends, event: Optional[Event] = None, cache: Optional[dict] = None
+) -> Tuple[Optional[Any], bool]:
     """Resolve a dependency into a value.
 
     The resulting values from dependencies are cached and re-used if a cache is supplied and the dependency itself
@@ -56,6 +67,7 @@ def resolve(dependency: Depends, cache: Optional[dict] = None) -> Tuple[Optional
     turn change the value of the current dependency).
 
     :param dependency: The dependency to resolve
+    :param event: The event for the current invocation
     :param cache: The cache for previously resolved dependencies
     :return: The tuple (resolved_value, cacheable)
     """
@@ -63,10 +75,10 @@ def resolve(dependency: Depends, cache: Optional[dict] = None) -> Tuple[Optional
         return cache[dependency]
 
     cacheable = dependency.cache
-    resolved_dependencies = {}
+    resolved_dependencies = {arg_name: event for arg_name in get_event_dependencies(dependency.callable)}
     required_dependencies = get_required_dependencies(dependency.callable)
     for arg_name, required_dependency in required_dependencies.items():
-        resolved_dependencies[arg_name], cacheable_dep = resolve(required_dependency, cache)
+        resolved_dependencies[arg_name], cacheable_dep = resolve(required_dependency, cache=cache)
         cacheable = cacheable and cacheable_dep
 
     value = dependency.callable(**resolved_dependencies)
@@ -90,3 +102,13 @@ def get_required_dependencies(callable_: Callable) -> Dict[str, Depends]:
         if arg.default is not inspect.Parameter.empty and isinstance(arg.default, Depends)
     }
     return required_dependencies
+
+
+def get_event_dependencies(callable_: Callable) -> List[str]:
+    """Get the parameter names for event dependencies.
+
+    :param callable_: The callable for which to get dependencies
+    :return: A list of the parameters requiring the event
+    """
+    signature = inspect.signature(callable_)
+    return [name for name, arg in signature.parameters.items() if arg.annotation is Event]
