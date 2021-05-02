@@ -4,6 +4,8 @@ from typing import Callable, Any, Optional, Dict, Tuple, List
 
 
 class Event(dict):
+    """Type to wrap a dict to be used as a dependency."""
+
     def __init__(self, dict_event: dict):
         super().__init__(dict_event)
 
