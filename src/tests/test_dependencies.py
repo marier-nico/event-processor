@@ -105,6 +105,24 @@ def test_resolve_forwards_event_when_event_type_is_present_in_params():
     assert resolved is event
 
 
+def test_resolve_injects_into_class_dependency():
+    mock_service = Mock()
+    event = Event({"a": 0})
+
+    def dependency():
+        return mock_service
+
+    class Thing:
+        def __init__(self, ev: Event, dep: Mock = Depends(dependency)):
+            self.dep = dep
+            self.ev = ev
+
+    resolved, _ = resolve(Depends(Thing), event=event)
+
+    assert resolved.ev == event
+    assert resolved.dep is mock_service
+
+
 def test_resolve_returns_callable_result():
     mock_callable = Mock()
     dependency = Depends(mock_callable)
