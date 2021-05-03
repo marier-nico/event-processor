@@ -52,7 +52,7 @@ def call_with_injection(
     """
     dependencies = get_required_dependencies(callable_)
     for arg_name, dependency in dependencies.items():
-        kwargs[arg_name], cacheable = resolve(dependency, cache=cache)
+        kwargs[arg_name], cacheable = resolve(dependency, event=event, cache=cache)
     kwargs.update({arg_name: event for arg_name in get_event_dependencies(callable_)})
 
     return callable_(*args, **kwargs)
