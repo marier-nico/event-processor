@@ -1,7 +1,6 @@
-from .exceptions import (  # noqa
-    EventProcessorException,
-    EventProcessorDependencyException,
-    EventProcessorInvocationException,
-    EventProcessorDecorationException,
-)
 from .event_processor import EventProcessor  # noqa
+from .exceptions import (  # noqa
+    EventProcessorError,
+    FilterError,
+    InvocationError,
+)

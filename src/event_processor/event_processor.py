@@ -4,9 +4,8 @@ from typing import Dict, Callable, Any
 
 from .dependencies import get_required_dependencies, get_event_dependencies, call_with_injection, Event
 from .exceptions import (
-    EventProcessorDecorationException,
-    EventProcessorInvocationException,
-    EventProcessorException,
+    FilterError,
+    InvocationError,
 )
 from .filters import Filter
 
@@ -19,15 +18,18 @@ class EventProcessor:
     def add_subprocessor(self, subprocessor: "EventProcessor"):
         for filter_, processor in subprocessor.processors.items():
             if filter_ in self.processors:
-                raise EventProcessorException("A processor already processes the event of a subprocessor")
+                raise FilterError(f"The filter '{filter_}' is already handled by another processor")
             self.processors[filter_] = processor
 
     def processor(self, event_filter: Filter):
         def decorate(fn):
             if not processor_params_are_valid(fn):
-                raise EventProcessorDecorationException("The processor expects some invalid parameters", fn)
+                raise FilterError(
+                    f"The processor '{fn}' expects some invalid parameters "
+                    f"(only dependencies and the event are allowed)"
+                )
             if event_filter in self.processors:
-                raise EventProcessorDecorationException("A processor already exists for this filter", fn)
+                raise FilterError(f"The filter '{event_filter}' ia already handled by another processor")
 
             self.processors[event_filter] = fn
             return fn
@@ -44,7 +46,7 @@ class EventProcessor:
                     most_specific, specificity = processor, current_filter_specificity
 
         if most_specific is None:
-            raise EventProcessorInvocationException("No matching processor found", event)
+            raise InvocationError(f"No matching processor for the event '{event}'")
         else:
             return call_with_injection(most_specific, event=Event(event), cache=self.dependency_cache)
 

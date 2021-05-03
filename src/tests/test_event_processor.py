@@ -5,9 +5,8 @@ import pytest
 from src.event_processor.dependencies import Depends, Event
 from src.event_processor.event_processor import EventProcessor, processor_params_are_valid
 from src.event_processor.exceptions import (
-    EventProcessorException,
-    EventProcessorDecorationException,
-    EventProcessorInvocationException,
+    FilterError,
+    InvocationError,
 )
 from src.event_processor.filters import Exists, Accept
 
@@ -33,7 +32,7 @@ def test_add_subprocessor_raises_for_existing_filters(event_processor):
     other_event_processor.processors[Accept()] = lambda: 0
     event_processor.processors[Accept()] = lambda: 1
 
-    with pytest.raises(EventProcessorException):
+    with pytest.raises(FilterError):
         event_processor.add_subprocessor(other_event_processor)
 
 
@@ -51,7 +50,7 @@ def test_processor_raises_exception_when_filter_exists(event_processor):
     filter_ = Exists("a")
     event_processor.processors[filter_] = 0
 
-    with pytest.raises(EventProcessorDecorationException):
+    with pytest.raises(FilterError):
 
         @event_processor.processor(filter_)
         def a_test():
@@ -60,7 +59,7 @@ def test_processor_raises_exception_when_filter_exists(event_processor):
 
 def test_processor_raises_exception_when_the_processor_takes_invalid_params(event_processor):
 
-    with pytest.raises(EventProcessorDecorationException):
+    with pytest.raises(FilterError):
 
         @event_processor.processor(Accept())
         def fn(_x):
@@ -82,7 +81,7 @@ def test_invoke_calls_matching_processor(event_processor):
 
 def test_invoke_raises_for_no_matching_processors(event_processor):
 
-    with pytest.raises(EventProcessorInvocationException):
+    with pytest.raises(InvocationError):
         event_processor.invoke({"a": 0})
 
 
