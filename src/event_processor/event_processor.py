@@ -2,18 +2,20 @@
 import inspect
 from typing import Dict, Callable, Any, Tuple
 
-from .dependencies import get_required_dependencies, get_event_dependencies, call_with_injection, Event
+from .dependencies import get_required_dependencies, get_event_dependencies, Event
 from .exceptions import (
     FilterError,
     InvocationError,
 )
 from .filters import Filter
+from .invocation_strategies import InvocationStrategies
 
 
 class EventProcessor:
-    def __init__(self):
+    def __init__(self, invocation_strategy: InvocationStrategies = InvocationStrategies.FIRST_MATCH):
         self.processors: Dict[Tuple[Filter, int], Callable] = {}
         self.dependency_cache = {}
+        self.invocation_strategy = invocation_strategy
 
     def add_subprocessor(self, subprocessor: "EventProcessor"):
         for filter_with_rank, processor in subprocessor.processors.items():
@@ -46,8 +48,7 @@ class EventProcessor:
                     matching.append(processor)
 
         if matching:
-            for match in matching:
-                return call_with_injection(match, event=Event(event), cache=self.dependency_cache)
+            return self.invocation_strategy.value.invoke(matching, event=Event(event), cache=self.dependency_cache)
         else:
             raise InvocationError(f"No matching processor for the event '{event}'")
 

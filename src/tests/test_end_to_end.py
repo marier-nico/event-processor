@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from src.event_processor.invocation_strategies import InvocationStrategies
 from src.event_processor.dependencies import Event, Depends
 from src.event_processor.event_processor import EventProcessor
 from src.event_processor.filters import Eq, Exists, Accept
@@ -77,3 +78,58 @@ def test_pre_processor_with_dependencies(event_processor):
     result = event_processor.invoke({})
 
     assert result is dependency_mock
+
+
+def test_ambiguous_filters_with_rank(event_processor):
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Exists("a"))
+    def a_processor():
+        mock_a()
+
+    @event_processor.processor(Eq("a", "b"), rank=1)
+    def b_processor():
+        mock_b()
+
+    event_processor.invoke({"a": "b"})
+
+    mock_a.assert_not_called()
+    mock_b.assert_called_once()
+
+
+def test_ambiguous_filters_with_no_rank(event_processor):
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Exists("a"))
+    def a_processor():
+        mock_a()
+
+    @event_processor.processor(Eq("a", "b"))
+    def b_processor():
+        mock_b()
+
+    event_processor.invoke({"a": "b"})
+
+    mock_a.assert_called_once()
+    mock_b.assert_not_called()
+
+
+def test_ambiguous_filters_with_no_rank_and_non_default_invocation_strategy():
+    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.NO_MATCHES)
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Exists("a"))
+    def a_processor():
+        mock_a()
+
+    @event_processor.processor(Eq("a", "b"))
+    def b_processor():
+        mock_b()
+
+    event_processor.invoke({"a": "b"})
+
+    mock_a.assert_not_called()
+    mock_b.assert_not_called()
