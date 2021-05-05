@@ -1,3 +1,4 @@
+"""Contains the different invocation strategies for calling processors."""
 from abc import ABC
 from enum import Enum
 from typing import Dict, Optional, List, Callable, Any
