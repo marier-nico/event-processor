@@ -145,14 +145,72 @@ Here's an example of how you can use ranking :
 Invocation Strategy
 -------------------
 
-- Call first
-- Call all
-- Call none (raise)
+To choose how to invoke your processor(s) in the case that multiple processors with the same rank all match a given
+event, you have to choose an invocation strategy.
+
+.. note::
+    The default invocation strategy is the :ref:`First Match` strategy.
+
+First Match
+___________
+
+This strategy calls the first matching processor (among those with the highest rank). It returns the processor's return
+value as-is.
+
+All Matches
+___________
+
+This strategy calls all the matching processors (that have the highest rank). It returns a tuple of results for all the
+processors (even if only a single match occurred).
+
+No Matches
+__________
+
+This strategy calls none of the matching processors if there are more than one (and returns none). Otherwise, it calls
+the single matching processor and returns its value as-is.
+
+No Matches Strict
+_________________
+
+This strategy calls none of the matching processors if there are more than one, and it raises an exception. Otherwise,
+it calls the single matching processors and returns its value as-is.
+
+Example
+_______
+
+To use a non-default invocation strategy, use the provided ``InvocationStrategies`` enum like so :
+
+.. testcode::
+
+    from event_processor import EventProcessor, InvocationStrategies
+    from event_processor.filters import Exists, Eq
+
+    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.ALL_MATCHES)
+
+
+    @event_processor.processor(Exists("a"))
+    def processor_a():
+        print("Processor a!")
+
+
+    @event_processor.processor(Eq("a", "b"))
+    def processor_b():
+        print("Processor b!")
+
+
+    event_processor.invoke({"a": "b"})
+
+.. testoutput::
+
+    Processor a!
+    Processor b!
 
 Caveats
 -------
 
-- Same filter can only be used by one processor
-- Will try to get the most specific processor for an event
-- Best effort, but try to be careful
+The main things to keep in mind for processors are :
+
+* The same filter can only be used by one processor.
+* It's possible to have ambiguous filters and those should be resolved with ranking.
+* Invocation strategies are used when the rank doesn't resolve ambiguous filters.
 

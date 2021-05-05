@@ -21,6 +21,10 @@ Filters are how you tell the library which processor to invoke for each event yo
 different kinds of filters, the most common being the ``Exists`` filter and the ``Eq`` filter. More info on the
 :ref:`filters<filters-detail>` page.
 
+.. note::
+    It's possible to have ambiguous filters (see :ref:`Filters<filters-detail>` for details). To resolve them, take a
+    look at :ref:`Ranking Processors` and :ref:`Invocation Strategies<Invocation Strategy>`.
+
 .. _dependencies-concept:
 
 Dependencies
