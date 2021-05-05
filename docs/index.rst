@@ -25,6 +25,7 @@ Documentation
    content/processors
    content/filters
    content/dependencies
+   content/testing
    content/code
 
 Changelog
