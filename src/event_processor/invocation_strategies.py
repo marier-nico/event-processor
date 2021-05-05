@@ -57,6 +57,8 @@ class NoMatchesStrict(InvocationStrategy):
 
 
 class InvocationStrategies(Enum):
+    """Enumeration of available invocation strategies."""
+
     FIRST_MATCH = FirstMatch
     ALL_MATCHES = AllMatches
     NO_MATCHES = NoMatches
