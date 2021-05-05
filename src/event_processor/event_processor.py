@@ -2,7 +2,7 @@
 import inspect
 from typing import Dict, Callable, Any, Tuple
 
-from .dependencies import get_required_dependencies, get_event_dependencies, Event
+from .dependencies import get_required_dependencies, get_event_dependencies, Event, Depends
 from .exceptions import (
     FilterError,
     InvocationError,
@@ -14,7 +14,7 @@ from .invocation_strategies import InvocationStrategies
 class EventProcessor:
     def __init__(self, invocation_strategy: InvocationStrategies = InvocationStrategies.FIRST_MATCH):
         self.processors: Dict[Tuple[Filter, int], Callable] = {}
-        self.dependency_cache = {}
+        self.dependency_cache: Dict[Depends, Any] = {}
         self.invocation_strategy = invocation_strategy
 
     def add_subprocessor(self, subprocessor: "EventProcessor"):

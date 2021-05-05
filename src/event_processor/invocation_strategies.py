@@ -2,8 +2,8 @@ from abc import ABC
 from enum import Enum
 from typing import Dict, Optional, List, Callable, Any
 
-from src.event_processor.exceptions import InvocationError
-from src.event_processor.dependencies import call_with_injection, Event
+from .exceptions import InvocationError
+from .dependencies import call_with_injection, Event
 
 
 class InvocationStrategy(ABC):
@@ -61,4 +61,3 @@ class InvocationStrategies(Enum):
     ALL_MATCHES = AllMatches
     NO_MATCHES = NoMatches
     NO_MATCHES_STRICT = NoMatchesStrict
-
