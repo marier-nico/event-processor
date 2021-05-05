@@ -15,17 +15,6 @@ class Filter(ABC):
         """
 
     @abstractmethod
-    def get_match_specificity(self, event: dict) -> int:
-        """Calculate the specificity of a filter match.
-
-        This represents (roughly) how many filters and sub-filters matched on a given event. This is used to determine
-        which processor should be invoked for a given event.
-
-        :param event: The event to evaluate
-        :return: The filter's match specificity
-        """
-
-    @abstractmethod
     def __hash__(self):
         """Hash a filter for storage in a dict or set."""
 
@@ -69,9 +58,6 @@ class Accept(Filter):
     def matches(self, _event: dict) -> bool:
         return True
 
-    def get_match_specificity(self, _event: dict) -> int:
-        return 1
-
     def __hash__(self):
         return hash(self.__class__)
 
@@ -94,9 +80,6 @@ class Exists(Filter):
                 return False
 
         return True
-
-    def get_match_specificity(self, event: dict) -> int:
-        return 1 if self.matches(event) else 0
 
     def __hash__(self):
         return hash((self.__class__, self.path))
@@ -124,9 +107,6 @@ class Eq(Filter):
 
         return False
 
-    def get_match_specificity(self, event: dict) -> int:
-        return 1 if self.matches(event) else 0
-
     def __hash__(self):
         return hash((self.__class__, (self.path, self.value)))
 
@@ -144,9 +124,6 @@ class And(Filter):
 
     def matches(self, event: dict) -> bool:
         return all(filter_.matches(event) for filter_ in self.filters)
-
-    def get_match_specificity(self, event: dict) -> int:
-        return sum(filter_.get_match_specificity(event) for filter_ in self.filters) + 2
 
     def __hash__(self):
         return hash((self.__class__, self.filters))
@@ -167,9 +144,6 @@ class Or(Filter):
 
     def matches(self, event: dict) -> bool:
         return any(filter_.matches(event) for filter_ in self.filters)
-
-    def get_match_specificity(self, event: dict) -> int:
-        return sum(filter_.get_match_specificity(event) for filter_ in self.filters) + 1
 
     def __hash__(self):
         return hash((self.__class__, self.filters))

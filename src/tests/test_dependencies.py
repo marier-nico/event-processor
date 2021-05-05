@@ -123,6 +123,18 @@ def test_resolve_injects_into_class_dependency():
     assert resolved.dep is mock_service
 
 
+def test_resolve_uses_cache_when_dependency_is_cached():
+    dependency_mock = Mock()
+    cache = {}
+
+    dependency = Depends(dependency_mock)
+
+    _resolved, _ = resolve(dependency, cache=cache)
+    _resolved, _ = resolve(dependency, cache=cache)
+
+    dependency_mock.assert_called_once()
+
+
 def test_resolve_returns_callable_result():
     mock_callable = Mock()
     dependency = Depends(mock_callable)

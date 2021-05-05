@@ -74,7 +74,7 @@ def resolve(
     :return: The tuple (resolved_value, cacheable)
     """
     if cache and dependency in cache:
-        return cache[dependency]
+        return cache[dependency], True
 
     cacheable = dependency.cache
     resolved_dependencies = {arg_name: event for arg_name in get_event_dependencies(dependency.callable)}

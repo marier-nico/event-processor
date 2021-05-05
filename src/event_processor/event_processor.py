@@ -1,6 +1,6 @@
 """Contains the EventProcessor class."""
 import inspect
-from typing import Dict, Callable, Any
+from typing import Dict, Callable, Any, Tuple
 
 from .dependencies import get_required_dependencies, get_event_dependencies, call_with_injection, Event
 from .exceptions import (
@@ -12,43 +12,44 @@ from .filters import Filter
 
 class EventProcessor:
     def __init__(self):
-        self.processors: Dict[Filter, Callable] = {}
+        self.processors: Dict[Tuple[Filter, int], Callable] = {}
         self.dependency_cache = {}
 
     def add_subprocessor(self, subprocessor: "EventProcessor"):
-        for filter_, processor in subprocessor.processors.items():
-            if filter_ in self.processors:
-                raise FilterError(f"The filter '{filter_}' is already handled by another processor")
-            self.processors[filter_] = processor
+        for filter_with_rank, processor in subprocessor.processors.items():
+            if filter_with_rank in self.processors:
+                raise FilterError(f"The filter '{filter_with_rank[0]}' is already handled by another processor")
+            self.processors[filter_with_rank] = processor
 
-    def processor(self, event_filter: Filter):
+    def processor(self, event_filter: Filter, rank: int = 0):
         def decorate(fn):
             if not processor_params_are_valid(fn):
                 raise FilterError(
                     f"The processor '{fn}' expects some invalid parameters "
                     f"(only dependencies and the event are allowed)"
                 )
-            if event_filter in self.processors:
+            if (event_filter, rank) in self.processors:
                 raise FilterError(f"The filter '{event_filter}' ia already handled by another processor")
 
-            self.processors[event_filter] = fn
+            self.processors[(event_filter, rank)] = fn
             return fn
 
         return decorate
 
     def invoke(self, event: Dict) -> Any:
-        most_specific, specificity = None, 0
-        for filter_, processor in self.processors.items():
+        matching, highest_rank = [], 0
+        for (filter_, rank), processor in self.processors.items():
             if filter_.matches(event):
-                current_filter_specificity = filter_.get_match_specificity(event)
+                if rank > highest_rank:
+                    matching, highest_rank = [processor], rank
+                elif rank == highest_rank:
+                    matching.append(processor)
 
-                if current_filter_specificity > specificity:
-                    most_specific, specificity = processor, current_filter_specificity
-
-        if most_specific is None:
-            raise InvocationError(f"No matching processor for the event '{event}'")
+        if matching:
+            for match in matching:
+                return call_with_injection(match, event=Event(event), cache=self.dependency_cache)
         else:
-            return call_with_injection(most_specific, event=Event(event), cache=self.dependency_cache)
+            raise InvocationError(f"No matching processor for the event '{event}'")
 
 
 def processor_params_are_valid(processor: Callable) -> bool:

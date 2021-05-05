@@ -74,10 +74,6 @@ def test_accept_filter_hash_returns_class_hash():
     assert hash(filter_) == hash(filter_.__class__)
 
 
-def test_accept_filter_get_match_specificity_returns_one():
-    assert Accept().get_match_specificity({"a": 0, "b": 1}) == 1
-
-
 def test_exists_filter_matches_event_with_existing_top_level_value():
     test_filter = Exists("top-level")
 
@@ -127,18 +123,6 @@ def test_exists_filter_hash_is_path_hash():
     filter_ = Exists("a")
 
     assert hash(filter_) == hash((Exists, "a"))
-
-
-def test_exists_filter_get_match_specificity_returns_one_when_there_is_a_match():
-    filter_ = Exists("a")
-
-    assert filter_.get_match_specificity({"a": 0}) == 1
-
-
-def test_exists_filter_get_match_specificity_returns_zero_when_there_is_no_match():
-    filter_ = Exists("a")
-
-    assert filter_.get_match_specificity({"b": 0}) == 0
 
 
 def test_eq_filter_matches_equal_top_level_value():
@@ -207,18 +191,6 @@ def test_eq_filter_hash_hashes_path_and_value():
     assert hash(filter_) == hash((Eq, ("a", 0)))
 
 
-def test_eq_filter_get_match_specificity_returns_one_when_there_is_a_match():
-    filter_ = Eq("a", 0)
-
-    assert filter_.get_match_specificity({"a": 0}) == 1
-
-
-def test_eq_filter_get_match_specificity_returns_zero_when_there_is_no_match():
-    filter_ = Eq("a", 0)
-
-    assert filter_.get_match_specificity({"a": 1}) == 0
-
-
 def test_and_filter_matches_when_all_filters_match():
     test_filter = And(Exists("a"), Exists("b"), Eq("c", "d"))
 
@@ -284,16 +256,6 @@ def test_and_filter_hash_is_hash_of_all_sub_filters():
     assert and_hash == hash((And, (a_filter, b_filter)))
 
 
-def test_and_filter_get_filter_specificity_is_two_more_than_the_sum_of_matching_sub_filters():
-    a_filter = Exists("a")
-    b_filter = Exists("b")
-    c_filter = Exists("c")
-
-    and_filter = And(a_filter, b_filter, c_filter)
-
-    assert and_filter.get_match_specificity({"a": 0, "b": 1, "c": 2}) == 3 + 2
-
-
 def test_or_filter_matches_when_one_filter_matches():
     test_filter = Or(Exists("a"), Eq("", "y"), Exists("0"))
 
@@ -357,25 +319,3 @@ def test_or_filter_hash_is_hash_of_all_sub_filters():
     or_hash = hash(Or(a_filter, b_filter))
 
     assert or_hash == hash((Or, (a_filter, b_filter)))
-
-
-def test_or_filter_get_filter_specificity_is_one_more_than_the_sum_of_matching_sub_filters():
-    a_filter = Exists("a")
-    b_filter = Exists("b")
-    c_filter = Exists("c")
-
-    or_filter = Or(a_filter, b_filter, c_filter)
-
-    assert or_filter.get_match_specificity({"a": 0, "b": 1, "c": 2}) == 3 + 1
-
-
-def test_and_filter_is_more_specific_than_or_filter_with_same_sub_filters():
-    a_filter = Exists("a")
-    b_filter = Exists("b")
-    c_filter = Exists("c")
-    event = {"a": 0, "b": 1, "c": 2}
-
-    or_filter = Or(a_filter, b_filter, c_filter)
-    and_filter = And(a_filter, b_filter, c_filter)
-
-    assert and_filter.get_match_specificity(event) > or_filter.get_match_specificity(event)
