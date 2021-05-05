@@ -1,0 +1,5 @@
+.. _dependencies-detail:
+
+Dependencies
+============
+
