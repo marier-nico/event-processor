@@ -14,7 +14,6 @@ how to use filters in practice, see the :ref:`core concepts<core-concepts-exampl
     Have a look at :ref:`Ranking Processors` to learn how to resolve these ambiguities. Also, note that these issues may
     not apply to your context. You only have to worry about this if you have ambiguous filters.
 
-
 Accept
 ------
 
@@ -142,7 +141,6 @@ You can also use ``&`` between processors instead of ``And`` explicitly to make 
     True
     False
     True
-
 
 Or
 --
