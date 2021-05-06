@@ -1,8 +1,11 @@
-from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
+from src.event_processor.invocation_strategies import InvocationStrategies
+from src.event_processor.dependencies import Event, Depends
 from src.event_processor.event_processor import EventProcessor
+from src.event_processor.filters import Eq, Exists, Accept
 
 
 @pytest.fixture
@@ -11,8 +14,8 @@ def event_processor():
 
 
 def test_simple_filtering(event_processor):
-    @event_processor.processor({"top.mid.low": "val"})
-    def my_processor(event):
+    @event_processor.processor(Eq("top.mid.low", "val"))
+    def my_processor(event: Event):
         return event["top"]["mid"]["low"]
 
     result = event_processor.invoke({"top": {"mid": {"low": "val", "other": 1234}}})
@@ -22,8 +25,8 @@ def test_simple_filtering(event_processor):
 
 @pytest.mark.parametrize("test_event, ret", [({"key": "val"}, "val"), ({"key": 123}, 123), ({"key": None}, None)])
 def test_any_filter(test_event, ret, event_processor):
-    @event_processor.processor({"key": Any})
-    def my_processor(event):
+    @event_processor.processor(Exists("key"))
+    def my_processor(event: Event):
         return event["key"]
 
     result = event_processor.invoke(test_event)
@@ -32,11 +35,11 @@ def test_any_filter(test_event, ret, event_processor):
 
 
 def test_simple_pre_processing(event_processor):
-    def pre_processor(event):
+    def pre_processor(event: Event):
         return event["user"]
 
-    @event_processor.processor({"user": Any}, pre_processor=pre_processor)
-    def my_processor(user_dict):
+    @event_processor.processor(Exists("user"))
+    def my_processor(user_dict=Depends(pre_processor)):
         return user_dict
 
     result = event_processor.invoke({"user": {"name": "John"}})
@@ -45,31 +48,88 @@ def test_simple_pre_processing(event_processor):
 
 
 def test_processor_with_dependencies(event_processor):
-    @event_processor.dependency_factory
-    def dep_factory(dep_name):
-        return dep_name
+    dependency_mock = Mock()
 
-    @event_processor.processor({}, dep_factory=("dep",))
-    def my_processor(_event, dep):
+    def get_dependency():
+        return dependency_mock
+
+    @event_processor.processor(Accept())
+    def my_processor(_event: Event, dep: Mock = Depends(get_dependency)):
         return dep
 
     result = event_processor.invoke({})
 
-    assert result == "dep"
+    assert result is dependency_mock
 
 
 def test_pre_processor_with_dependencies(event_processor):
-    @event_processor.dependency_factory
-    def dep_factory(dep_name):
-        return dep_name
+    dependency_mock = Mock()
 
-    def pre_processor(_event, dep):
+    def dep_factory():
+        return dependency_mock
+
+    def pre_processor(_event: Event, dep=Depends(dep_factory)):
         return dep
 
-    @event_processor.processor({}, pre_processor=pre_processor, dep_factory=("dep",))
-    def my_processor(dep_from_pre_processor):
+    @event_processor.processor(Accept())
+    def my_processor(dep_from_pre_processor=Depends(pre_processor)):
         return dep_from_pre_processor
 
     result = event_processor.invoke({})
 
-    assert result == "dep"
+    assert result is dependency_mock
+
+
+def test_ambiguous_filters_with_rank(event_processor):
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Exists("a"))
+    def a_processor():
+        mock_a()
+
+    @event_processor.processor(Eq("a", "b"), rank=1)
+    def b_processor():
+        mock_b()
+
+    event_processor.invoke({"a": "b"})
+
+    mock_a.assert_not_called()
+    mock_b.assert_called_once()
+
+
+def test_ambiguous_filters_with_no_rank(event_processor):
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Exists("a"))
+    def a_processor():
+        mock_a()
+
+    @event_processor.processor(Eq("a", "b"))
+    def b_processor():
+        mock_b()
+
+    event_processor.invoke({"a": "b"})
+
+    mock_a.assert_called_once()
+    mock_b.assert_not_called()
+
+
+def test_ambiguous_filters_with_no_rank_and_non_default_invocation_strategy():
+    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.NO_MATCHES)
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Exists("a"))
+    def a_processor():
+        mock_a()
+
+    @event_processor.processor(Eq("a", "b"))
+    def b_processor():
+        mock_b()
+
+    event_processor.invoke({"a": "b"})
+
+    mock_a.assert_not_called()
+    mock_b.assert_not_called()

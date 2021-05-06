@@ -13,14 +13,14 @@ Exceptions
 .. automodule:: exceptions
    :members:
 
-Processor
+Filtering
 ---------
 
-.. automodule:: processor
+.. automodule:: filters
    :members:
 
-Pre-Processors
-----------------
+Dependency Injection
+--------------------
 
-.. automodule:: pre_processors
+.. automodule:: dependencies
    :members:
