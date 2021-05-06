@@ -1,3 +1,4 @@
 - v2.0.0: Refactor a lot of the internals, make filters more user friendly and dependency injection more intuitive
+- v1.1.0: Add support for subprocessors
 - v1.0.0: Move the state and decorators inside a class
 - v0.0.1: Initial release
