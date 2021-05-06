@@ -35,6 +35,7 @@ class EventProcessor:
         :param event_filter: The filter for which to match events
         :param rank: This processor's rank (when there are multiple matches for a single event)
         """
+
         def decorate(fn):
             if not processor_params_are_valid(fn):
                 raise FilterError(
