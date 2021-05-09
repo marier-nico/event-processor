@@ -2,6 +2,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from event_processor.util import get_value_at_path
+
 
 class Filter(ABC):
     """Abstract filter to define the filter interface."""
@@ -72,12 +74,10 @@ class Exists(Filter):
         self.path = path
 
     def matches(self, event: dict) -> bool:
-        current_location = event
-        for part in self.path.split("."):
-            if current_location and part in current_location:
-                current_location = current_location[part]
-            else:
-                return False
+        try:
+            get_value_at_path(event, self.path)
+        except KeyError:
+            return False
 
         return True
 
@@ -98,14 +98,10 @@ class Eq(Filter):
         self.value = value
 
     def matches(self, event: dict) -> bool:
-        if Exists(self.path).matches(event):
-            current_location = event
-            for part in self.path.split("."):
-                current_location = current_location[part]
-
-            return current_location == self.value
-
-        return False
+        try:
+            return self.value == get_value_at_path(event, self.path)
+        except KeyError:
+            return False
 
     def __hash__(self):
         return hash((self.__class__, (self.path, self.value)))
