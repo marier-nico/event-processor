@@ -1,6 +1,6 @@
 """Contains many different filters to conveniently filter through events."""
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any, Union, Callable
 
 from event_processor.util import get_value_at_path
 
@@ -112,12 +112,19 @@ class Eq(Filter):
         return False
 
 
-class Lt(Filter):
-    """Accept events where the value at the given path exists and is less than the specified value."""
+class NumCmp(Filter):
+    """Accept events when the comparator returns True.
 
-    def __init__(self, path: Any, value: Union[int, float]):
+    If you use this processor, make sure that you don't use equal (and not identical) comparators for the same path.
+    For example, don't use the same lambda in two different places. Instead, use a function, and pass a reference to
+    that function. If you don't do that, the filters will effectively be different (even if they match the same thing),
+    leading to perhaps unexpected results.
+    """
+
+    def __init__(self, path: Any, comparator: Callable[[float, float], bool], target: float):
         self.path = path
-        self.value = float(value)
+        self.comparator = comparator
+        self.target = target
 
     def matches(self, event: dict) -> bool:
         try:
@@ -126,15 +133,27 @@ class Lt(Filter):
         except (KeyError, ValueError):
             return False
 
-        return float_value < self.value
+        return self.comparator(float_value, self.target)
 
     def __hash__(self):
-        return hash((self.__class__, (self.path, self.value)))
+        return hash((self.__class__, (self.path, self.comparator, self.target)))
 
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
-            return self.path == other.path and self.value == other.value
+            return self.path == other.path and self.comparator == other.comparator and self.target == other.target
         return False
+
+
+class Lt(NumCmp):
+    """Accept events where the value at the given path exists and is less than the specified value."""
+
+    def __init__(self, path: Any, value: Union[int, float]):
+        float_value = float(value)
+        super().__init__(path, self._compare, float_value)
+
+    @staticmethod
+    def _compare(event_value: float, target_value: float):
+        return event_value < target_value
 
 
 class And(Filter):
