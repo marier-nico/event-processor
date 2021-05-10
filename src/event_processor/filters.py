@@ -1,6 +1,6 @@
 """Contains many different filters to conveniently filter through events."""
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Union
 
 from event_processor.util import get_value_at_path
 
@@ -102,6 +102,31 @@ class Eq(Filter):
             return self.value == get_value_at_path(event, self.path)
         except KeyError:
             return False
+
+    def __hash__(self):
+        return hash((self.__class__, (self.path, self.value)))
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            return self.path == other.path and self.value == other.value
+        return False
+
+
+class Lt(Filter):
+    """Accept events where the value at the given path exists and is less than the specified value."""
+
+    def __init__(self, path: Any, value: Union[int, float]):
+        self.path = path
+        self.value = float(value)
+
+    def matches(self, event: dict) -> bool:
+        try:
+            found_value = get_value_at_path(event, self.path)
+            float_value = float(found_value)
+        except (KeyError, ValueError):
+            return False
+
+        return float_value < self.value
 
     def __hash__(self):
         return hash((self.__class__, (self.path, self.value)))

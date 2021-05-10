@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.event_processor.filters import Exists, Accept, Eq, And, Or
+from src.event_processor.filters import Exists, Accept, Eq, And, Or, Lt
 
 
 def test_filter_and_creates_and_filter():
@@ -189,6 +189,77 @@ def test_eq_filter_hash_hashes_path_and_value():
     filter_ = Eq("a", 0)
 
     assert hash(filter_) == hash((Eq, ("a", 0)))
+
+
+def test_lt_filter_matches_when_value_is_less_than():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "-1"})
+
+    assert result is True
+
+
+def test_lt_filter_does_not_match_when_value_is_equal():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is False
+
+
+def test_lt_filter_does_not_match_when_value_greater_than():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "1"})
+
+    assert result is False
+
+
+def test_lt_filter_raises_value_error_when_input_value_is_not_a_float():
+    with pytest.raises(ValueError):
+        Lt("a", "not-a-float")
+
+
+def test_lt_filter_does_not_match_when_path_does_not_exist():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"not-a": "-1"})
+
+    assert result is False
+
+
+def test_lt_filter_does_not_match_when_value_is_not_a_float():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "not-a-float"})
+
+    assert result is False
+
+
+def test_lt_filter_hash_hashes_path_and_value():
+    assert hash(Lt("a", 0)) == hash((Lt, ("a", 0)))
+
+
+def test_lt_filter_eq_is_equal_when_path_and_value_are_equal():
+    lt_a = Lt("a", 0)
+    lt_b = Lt("a", 0)
+
+    assert lt_a == lt_b
+
+
+def test_lt_filter_eq_is_not_equal_when_path_and_value_are_not_equal():
+    lt_a = Lt("a", 0)
+    lt_b = Lt("b", 0)
+    lt_c = Lt("a", 1)
+
+    assert not lt_a == lt_b
+    assert not lt_a == lt_c
+
+
+def test_lt_filter_eq_is_not_equal_when_types_are_different():
+    lt_a = Lt("a", 0)
+
+    assert not lt_a == 0
 
 
 def test_and_filter_matches_when_all_filters_match():
