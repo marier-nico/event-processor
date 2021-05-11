@@ -1,3 +1,4 @@
+- v2.1.1: Fix negative ranks and document the -1 rank usage
 - v2.1.0: Add number comparison filters
 - v2.0.0: Refactor a lot of the internals, make filters more user friendly and dependency injection more intuitive
 - v1.1.0: Add support for subprocessors

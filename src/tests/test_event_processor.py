@@ -142,6 +142,26 @@ def test_invoke_calls_highest_ranking_processor(event_processor):
     assert called_b is True
 
 
+def test_invoke_calls_negative_rank_as_fallback(event_processor):
+    called_a = False
+    called_b = False
+
+    @event_processor.processor(Accept(), rank=-1)
+    def fn_a():
+        nonlocal called_a
+        called_a = True
+
+    @event_processor.processor(Exists("a"))
+    def fn_b():
+        nonlocal called_b
+        called_b = True
+
+    event_processor.invoke({"not-a": 0})
+
+    assert called_a is True
+    assert called_b is False
+
+
 def test_processor_params_are_valid_returns_true_for_valid_params():
     def processor(_a: Event, _b: Event, _c=Depends(Mock())):
         pass

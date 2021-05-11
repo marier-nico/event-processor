@@ -115,6 +115,9 @@ Here's an example of how you can use ranking :
     The default rank for processors is ``0``. The matching processor with the highest rank will be called. **To learn
     how to specify what to do when multiple processors match with the same rank, see** :ref:`Invocation Strategy`.
 
+    Another useful thing to think about is that you can use the ``-1`` rank to make a processor be called last when
+    there are multiple matches. This is especially useful when coupled with the :ref:`Accept` filter.
+
 .. testcode:: processors
 
     from event_processor import EventProcessor

@@ -58,7 +58,7 @@ class EventProcessor:
         :param event: The event to find a processor for
         :return: The return value of the processor
         """
-        matching, highest_rank = [], 0
+        matching, highest_rank = [], float("-inf")
         for (filter_, rank), processor in self.processors.items():
             if filter_.matches(event):
                 if rank > highest_rank:
