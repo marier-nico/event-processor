@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.event_processor.filters import Exists, Accept, Eq, And, Or
+from src.event_processor.filters import Exists, Accept, Eq, And, Or, Lt, NumCmp, Leq, Gt, Geq
 
 
 def test_filter_and_creates_and_filter():
@@ -189,6 +189,237 @@ def test_eq_filter_hash_hashes_path_and_value():
     filter_ = Eq("a", 0)
 
     assert hash(filter_) == hash((Eq, ("a", 0)))
+
+
+def test_num_cmp_filter_matches_when_comparator_returns_true():
+    comparator_mock = Mock(return_value=True)
+    filter_ = NumCmp("a", comparator_mock, 0)
+
+    result = filter_.matches({"a": 0})
+
+    assert result is True
+
+
+def test_num_cmp_filter_does_not_match_when_comparator_returns_false():
+    comparator_mock = Mock(return_value=False)
+    filter_ = NumCmp("a", comparator_mock, 0)
+
+    result = filter_.matches({"a": 0})
+
+    assert result is False
+
+
+def test_num_cmp_filter_hash_hashes_path_and_comparator():
+    mock_comparator = Mock()
+    assert hash(NumCmp("a", mock_comparator, 0)) == hash((NumCmp, ("a", mock_comparator, 0)))
+
+
+def test_num_cmp_filter_is_equal_when_path_and_comparator_and_target_are_equal():
+    mock_comparator = Mock()
+    a_cmp = NumCmp("a", mock_comparator, 0)
+    b_cmp = NumCmp("a", mock_comparator, 0)
+
+    assert a_cmp == b_cmp
+
+
+def test_num_cmp_filter_is_not_equal_when_path_or_comparator_or_target_are_different():
+    mock_comparator = Mock()
+    other_mock_comparator = Mock()
+    a_cmp = NumCmp("a", mock_comparator, 0)
+    b_cmp = NumCmp("b", mock_comparator, 0)
+    c_cmp = NumCmp("a", other_mock_comparator, 0)
+    d_cmp = NumCmp("a", mock_comparator, 1)
+
+    assert not a_cmp == b_cmp
+    assert not a_cmp == c_cmp
+    assert not a_cmp == d_cmp
+
+
+def test_num_cmp_filter_is_not_equal_when_comparing_with_another_type():
+    mock_comparator = Mock()
+    a_cmp = NumCmp("a", mock_comparator, 0)
+
+    assert not a_cmp == 0
+
+
+def test_lt_filter_matches_when_value_is_less_than():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "-1"})
+
+    assert result is True
+
+
+def test_lt_filter_does_not_match_when_value_is_equal():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is False
+
+
+def test_lt_filter_does_not_match_when_value_greater_than():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "1"})
+
+    assert result is False
+
+
+def test_lt_filter_raises_value_error_when_input_value_is_not_a_float():
+    with pytest.raises(ValueError):
+        Lt("a", "not-a-float")
+
+
+def test_lt_filter_does_not_match_when_path_does_not_exist():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"not-a": "-1"})
+
+    assert result is False
+
+
+def test_lt_filter_does_not_match_when_value_is_not_a_float():
+    filter_ = Lt("a", 0)
+
+    result = filter_.matches({"a": "not-a-float"})
+
+    assert result is False
+
+
+def test_leq_filter_matches_when_value_is_less_than():
+    filter_ = Leq("a", 0)
+
+    result = filter_.matches({"a": "-1"})
+
+    assert result is True
+
+
+def test_leq_filter_matches_when_value_is_equal():
+    filter_ = Leq("a", 0)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is True
+
+
+def test_leq_filter_does_not_match_when_value_greater_than():
+    filter_ = Leq("a", 0)
+
+    result = filter_.matches({"a": "1"})
+
+    assert result is False
+
+
+def test_leq_filter_raises_value_error_when_input_value_is_not_a_float():
+    with pytest.raises(ValueError):
+        Leq("a", "not-a-float")
+
+
+def test_leq_filter_does_not_match_when_path_does_not_exist():
+    filter_ = Leq("a", 0)
+
+    result = filter_.matches({"not-a": "-1"})
+
+    assert result is False
+
+
+def test_leq_filter_does_not_match_when_value_is_not_a_float():
+    filter_ = Leq("a", 0)
+
+    result = filter_.matches({"a": "not-a-float"})
+
+    assert result is False
+
+
+def test_gt_filter_matches_when_value_is_greater_than():
+    filter_ = Gt("a", 0)
+
+    result = filter_.matches({"a": "1"})
+
+    assert result is True
+
+
+def test_gt_filter_does_not_match_when_value_is_equal():
+    filter_ = Gt("a", 0)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is False
+
+
+def test_gt_filter_does_not_match_when_value_is_less_than():
+    filter_ = Gt("a", 1)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is False
+
+
+def test_gt_filter_raises_value_error_when_input_value_is_not_a_float():
+    with pytest.raises(ValueError):
+        Gt("a", "not-a-float")
+
+
+def test_gt_filter_does_not_match_when_path_does_not_exist():
+    filter_ = Gt("a", 0)
+
+    result = filter_.matches({"not-a": "-1"})
+
+    assert result is False
+
+
+def test_gt_filter_does_not_match_when_value_is_not_a_float():
+    filter_ = Gt("a", 0)
+
+    result = filter_.matches({"a": "not-a-float"})
+
+    assert result is False
+
+
+def test_geq_filter_matches_when_value_is_greater_than():
+    filter_ = Geq("a", 0)
+
+    result = filter_.matches({"a": "1"})
+
+    assert result is True
+
+
+def test_geq_filter_matches_when_value_is_equal():
+    filter_ = Geq("a", 0)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is True
+
+
+def test_geq_filter_does_not_match_when_value_is_less_than():
+    filter_ = Geq("a", 1)
+
+    result = filter_.matches({"a": "0"})
+
+    assert result is False
+
+
+def test_geq_filter_raises_value_error_when_input_value_is_not_a_float():
+    with pytest.raises(ValueError):
+        Geq("a", "not-a-float")
+
+
+def test_geq_filter_does_not_match_when_path_does_not_exist():
+    filter_ = Geq("a", 0)
+
+    result = filter_.matches({"not-a": "-1"})
+
+    assert result is False
+
+
+def test_geq_filter_does_not_match_when_value_is_not_a_float():
+    filter_ = Geq("a", 0)
+
+    result = filter_.matches({"a": "not-a-float"})
+
+    assert result is False
 
 
 def test_and_filter_matches_when_all_filters_match():

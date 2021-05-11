@@ -88,6 +88,80 @@ is found at the specified key (as opposed to just existing).
     True
     False
 
+NumCmp
+------
+
+This filter matches numbers that satisfy a comparison function with a given target.
+
+.. note::
+    You should try to avoid using this filter directly and instead use :ref:`Lt, Leq, Gt, Geq` when possible.
+
+    The reason for this advisory is that in python, callables with the same code will compare as not being equal, which
+    means that if you start using lambdas as the comparator (and more critically, if you use different lambdas that have
+    the same behavior as comparators), then the equality checks for this filter will be inaccurate. This leads to
+    duplicate processors not raising exceptions at import time.
+
+    The tl;dr: if you use this filter, don't use lambdas as comparators and don't use different functions that do the
+    same thing either.
+
+.. testcode::
+
+    from event_processor.filters import NumCmp
+
+    def y_greater_than_twice_x(x, y):
+        return (2 * x) < y
+
+    # Note that the comparator is the same here, this is important.
+    # You can use different comparators, but only if they do different things.
+    twice_a_less_than_four = NumCmp("a", y_greater_than_twice_x, 4)
+    twice_a_less_than_eight = NumCmp("a", y_greater_than_twice_x, 8)
+
+    print(twice_a_less_than_four.matches({"a": 1}))
+    print(twice_a_less_than_four.matches({"a": 2}))
+    print(twice_a_less_than_eight.matches({"a": 3}))
+    print(twice_a_less_than_eight.matches({"a": 4}))
+    print(twice_a_less_than_eight.matches({"not-a": 2}))
+
+.. testoutput::
+
+    True
+    False
+    True
+    False
+    False
+
+Lt, Leq, Gt, Geq
+----------------
+
+These filters all work in the same way in that they match when a value is present at the given path and it satisfies a
+comparison operation.
+
+* ``Lt`` means ``<``
+* ``Leq`` means ``<=``
+* ``Gt`` means ``>``
+* ``Geq`` means ``>=``
+
+.. testcode::
+
+    from event_processor.filters import Lt, Leq, Gt, Geq
+
+    a_lt_0 = Lt("a", 0)
+    a_leq_0 = Leq("a", 0)
+    a_gt_0 = Gt("a", 0)
+    a_geq_0 = Geq("a", 0)
+
+    print(a_lt_0.matches({"a": 0}))
+    print(a_leq_0.matches({"a": 0}))
+    print(a_gt_0.matches({"a": 0}))
+    print(a_geq_0.matches({"a": 0}))
+
+.. testoutput::
+
+    False
+    True
+    False
+    True
+
 And
 ---
 
