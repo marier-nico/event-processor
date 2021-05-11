@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from event_processor.util import get_value_at_path
+from src.event_processor.util import get_value_at_path
 
 
 def test_get_value_at_path_gets_the_value_when_it_exists():

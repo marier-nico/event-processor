@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Union, Callable
 
-from event_processor.util import get_value_at_path
+from .util import get_value_at_path
 
 
 class Filter(ABC):
@@ -152,8 +152,44 @@ class Lt(NumCmp):
         super().__init__(path, self._compare, float_value)
 
     @staticmethod
-    def _compare(event_value: float, target_value: float):
+    def _compare(event_value: float, target_value: float) -> bool:
         return event_value < target_value
+
+
+class Leq(NumCmp):
+    """Accept events where the value at the given path exists is less than or equal to the specified value."""
+
+    def __init__(self, path: Any, value: Union[int, float]):
+        float_value = float(value)
+        super().__init__(path, self._compare, float_value)
+
+    @staticmethod
+    def _compare(event_value: float, target_value: float) -> bool:
+        return event_value <= target_value
+
+
+class Gt(NumCmp):
+    """Accept events where the value exists and is greater than the specified value."""
+
+    def __init__(self, path: Any, value: Union[int, float]):
+        float_value = float(value)
+        super().__init__(path, self._compare, float_value)
+
+    @staticmethod
+    def _compare(event_value: float, target_value: float) -> bool:
+        return event_value > target_value
+
+
+class Geq(NumCmp):
+    """Accept events where the value exists and is greater than or equal to the specified value."""
+
+    def __init__(self, path: Any, value: Union[int, float]):
+        float_value = float(value)
+        super().__init__(path, self._compare, float_value)
+
+    @staticmethod
+    def _compare(event_value: float, target_value: float) -> bool:
+        return event_value >= target_value
 
 
 class And(Filter):
