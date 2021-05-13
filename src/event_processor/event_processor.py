@@ -2,7 +2,7 @@
 import inspect
 from typing import Dict, Callable, Any, Tuple
 
-from .dependencies import get_required_dependencies, get_event_dependencies, Event, Depends
+from .dependencies import get_required_dependencies, get_event_dependencies, Event, Depends, get_pydantic_dependencies
 from .exceptions import (
     FilterError,
     InvocationError,
@@ -40,7 +40,7 @@ class EventProcessor:
             if not processor_params_are_valid(fn):
                 raise FilterError(
                     f"The processor '{fn}' expects some invalid parameters "
-                    f"(only dependencies and the event are allowed)"
+                    f"(only dependencies, the event and pydantic models (if pydantic is installed) are allowed)"
                 )
             if (event_filter, rank) in self.processors:
                 raise FilterError(f"The filter '{event_filter}' ia already handled by another processor")
@@ -80,5 +80,8 @@ def processor_params_are_valid(processor: Callable) -> bool:
     """
     dependencies = get_required_dependencies(processor)
     event_dependencies = get_event_dependencies(processor)
+    pydantic_dependencies = get_pydantic_dependencies(processor)
 
-    return len(dependencies) + len(event_dependencies) == len(inspect.signature(processor).parameters)
+    expected_dependency_count = len(dependencies) + len(event_dependencies) + len(pydantic_dependencies)
+
+    return expected_dependency_count == len(inspect.signature(processor).parameters)

@@ -1,5 +1,6 @@
 black
 invoke
+pydantic
 pytest
 pytest-cov
 requests

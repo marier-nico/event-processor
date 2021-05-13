@@ -1,4 +1,9 @@
-from unittest.mock import Mock
+import importlib
+import sys
+from typing import List
+from unittest.mock import Mock, patch
+
+from pydantic import BaseModel
 
 from src.event_processor.dependencies import (
     Depends,
@@ -7,6 +12,7 @@ from src.event_processor.dependencies import (
     call_with_injection,
     Event,
     get_event_dependencies,
+    get_pydantic_dependencies,
 )
 
 
@@ -44,14 +50,6 @@ def test_call_with_injection_calls_callable():
     call_with_injection(callable_mock)
 
     callable_mock.assert_called_once()
-
-
-def test_call_with_injection_passes_parameters():
-    callable_mock = Mock()
-
-    call_with_injection(callable_mock, None, None, 1, 2, x=3)
-
-    callable_mock.assert_called_once_with(1, 2, x=3)
 
 
 def test_call_with_injection_injects_dependencies():
@@ -121,6 +119,32 @@ def test_resolve_injects_into_class_dependency():
 
     assert resolved.ev == event
     assert resolved.dep is mock_service
+
+
+def test_resolve_injects_pydantic_model_when_present_in_params():
+    class Thing(BaseModel):
+        id_: int
+        items: List[str]
+
+    def fn(thing: Thing):
+        return thing
+
+    resolved, _ = resolve(Depends(fn), event=Event({"id_": 1234, "items": ["a", "b"]}))
+
+    assert resolved == Thing(id_=1234, items=["a", "b"])
+
+
+def test_resolve_does_not_fail_when_the_event_contains_more_info_than_is_required():
+    class Thing(BaseModel):
+        id_: int
+        items: List[str]
+
+    def fn(thing: Thing):
+        return thing
+
+    resolved, _ = resolve(Depends(fn), event=Event({"id_": 1234, "items": ["a", "b"], "other": "stuff"}))
+
+    assert resolved == Thing(id_=1234, items=["a", "b"])
 
 
 def test_resolve_uses_cache_when_dependency_is_cached():
@@ -237,3 +261,34 @@ def test_get_event_dependencies_returns_empty_list_for_no_event_dependencies():
     param = get_event_dependencies(callable_mock)
 
     assert param == []
+
+
+def test_get_pydantic_dependencies_returns_dependencies_when_they_are_specified():
+    class Thing(BaseModel):
+        pass
+
+    def fn(_a: Thing):
+        pass
+
+    dependencies = get_pydantic_dependencies(fn)
+
+    assert dependencies == {"_a": Thing}
+
+
+def test_get_pydantic_dependencies_returns_no_dependencies_when_none_are_specified():
+    def fn():
+        pass
+
+    dependencies = get_pydantic_dependencies(fn)
+
+    assert dependencies == {}
+
+
+@patch("src.event_processor.dependencies._has_pydantic", False)
+def test_get_pydantic_dependencies_returns_none_even_when_present_if_pydantic_is_not_installed():
+    def fn(_a: BaseModel):
+        pass
+
+    dependencies = get_pydantic_dependencies(fn)
+
+    assert dependencies == {}

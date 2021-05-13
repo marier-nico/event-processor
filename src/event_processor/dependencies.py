@@ -2,6 +2,13 @@
 import inspect
 from typing import Callable, Any, Optional, Dict, Tuple, List
 
+try:
+    from pydantic import BaseModel
+
+    _has_pydantic = True
+except ImportError:  # pragma: no cover
+    _has_pydantic = False
+
 
 class Event(dict):
     """Type to wrap a dict to be used as a dependency."""
@@ -36,7 +43,7 @@ class Depends:
 
 
 def call_with_injection(
-    callable_: Callable, event: Optional[Event] = None, cache: Optional[dict] = None, *args, **kwargs
+    callable_: Callable, event: Optional[Event] = None, cache: Optional[dict] = None
 ) -> Optional[Any]:
     """Call a callable and inject required dependencies.
 
@@ -46,16 +53,10 @@ def call_with_injection(
     :param callable_: The callable to call
     :param event: The event for the current invocation
     :param cache: The dependency cache to use
-    :param args: The args to pass to the callable
-    :param kwargs: The kwargs to pass to the callable
     :return: The return value of the callable
     """
-    dependencies = get_required_dependencies(callable_)
-    for arg_name, dependency in dependencies.items():
-        kwargs[arg_name], cacheable = resolve(dependency, event=event, cache=cache)
-    kwargs.update({arg_name: event for arg_name in get_event_dependencies(callable_)})
-
-    return callable_(*args, **kwargs)
+    value, _cacheable = resolve(Depends(callable_, cache=False), event=event, cache=cache)
+    return value
 
 
 def resolve(
@@ -72,15 +73,21 @@ def resolve(
     :param event: The event for the current invocation
     :param cache: The cache for previously resolved dependencies
     :return: The tuple (resolved_value, cacheable)
+    :raises: pydantic.error_wrappers.ValidationError if the event cannot be parsed into a pydantic model
     """
     if cache and dependency in cache:
         return cache[dependency], True
-
     cacheable = dependency.cache
-    resolved_dependencies = {arg_name: event for arg_name in get_event_dependencies(dependency.callable)}
-    required_dependencies = get_required_dependencies(dependency.callable)
-    for arg_name, required_dependency in required_dependencies.items():
-        resolved_dependencies[arg_name], cacheable_dep = resolve(required_dependency, cache=cache)
+
+    resolved_dependencies: Dict[str, Any] = {}
+    for arg_name in get_event_dependencies(dependency.callable):
+        resolved_dependencies[arg_name] = event
+
+    for arg_name, model in get_pydantic_dependencies(dependency.callable).items():
+        resolved_dependencies[arg_name] = model.parse_obj(event)
+
+    for arg_name, required_dependency in get_required_dependencies(dependency.callable).items():
+        resolved_dependencies[arg_name], cacheable_dep = resolve(required_dependency, event=event, cache=cache)
         cacheable = cacheable and cacheable_dep
 
     value = dependency.callable(**resolved_dependencies)
@@ -114,3 +121,18 @@ def get_event_dependencies(callable_: Callable) -> List[str]:
     """
     signature = inspect.signature(callable_)
     return [name for name, arg in signature.parameters.items() if arg.annotation is Event]
+
+
+def get_pydantic_dependencies(callable_: Callable) -> Dict[str, "BaseModel"]:
+    """Get the required models and their parameter names for a callable.
+
+    :param callable_: The callable for which to get dependencies
+    :return: A mapping of argument names to pydantic model types
+    """
+    if _has_pydantic:
+        signature = inspect.signature(callable_)
+        return {
+            name: arg.annotation for name, arg in signature.parameters.items() if issubclass(arg.annotation, BaseModel)
+        }
+    else:
+        return {}
