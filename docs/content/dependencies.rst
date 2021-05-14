@@ -209,3 +209,45 @@ And here's an example where a dependency depends on the event :
 .. testoutput::
 
     someone@example.com
+
+Pydantic Dependencies
+---------------------
+
+`Pydantic <https://pydantic-docs.helpmanual.io/>`_ is a library which helps with data validation and settings management
+using python type annotations. You can leverage it in event processors to benefit from both the convenience of
+automatically parsing an event into a given type and having it fully validated. Pydantic can also provide detailed and
+friendly error messages to users for validation errors.
+
+Here's a simple example to illustrate how the event might be parsed for use in a processor :
+
+.. testcode::
+
+    from event_processor import EventProcessor
+    from event_processor.filters import Eq
+    from pydantic import BaseModel
+
+    event_processor = EventProcessor()
+
+
+    class CreateUserQuery(BaseModel):
+        email: str
+        password: str
+
+
+    @event_processor.processor(Eq("query", "create_user"))
+    def handle_user_creation(query: CreateUserQuery):
+        print(query.email)
+        print(query.password)
+
+
+    event_processor.invoke(
+        {"query": "create_user", "email": "someone@example.com", "password": "hunter2"}
+    )
+
+.. testoutput::
+
+    someone@example.com
+    hunter2
+
+You can also add custom validations for fields using `validators <https://pydantic-docs.helpmanual.io/usage/validators/>`_
+as well as many other things. Take a look at the pydantic docs to learn more!

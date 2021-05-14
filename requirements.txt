@@ -1,6 +1,6 @@
 black
 invoke
-pydantic
+pydantic ~= 1.8.2
 pytest
 pytest-cov
 requests
