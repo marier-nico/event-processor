@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pydantic import BaseModel
 
 from src.event_processor.dependencies import Depends, Event
 from src.event_processor.event_processor import EventProcessor, processor_params_are_valid
@@ -163,14 +164,14 @@ def test_invoke_calls_negative_rank_as_fallback(event_processor):
 
 
 def test_processor_params_are_valid_returns_true_for_valid_params():
-    def processor(_a: Event, _b: Event, _c=Depends(Mock())):
+    def processor(_a: Event, _b: Event, _c: BaseModel, _d=Depends(Mock())):
         pass
 
     assert processor_params_are_valid(processor) is True
 
 
 def test_processor_params_are_valid_returns_false_for_invalid_params():
-    def processor(_a: Event, _b: Event, _c=Depends(Mock()), _d=0):
+    def processor(_a: Event, _b: Event, _c: BaseModel, _d=Depends(Mock()), _e=0):
         pass
 
     assert processor_params_are_valid(processor) is False
