@@ -1,3 +1,4 @@
+- v2.3.0: Support dynamic filters
 - v2.2.0: Support pydantic models as processor dependencies
 - v2.1.1: Fix negative ranks and document the -1 rank usage
 - v2.1.0: Add number comparison filters
