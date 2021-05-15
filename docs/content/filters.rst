@@ -162,6 +162,63 @@ comparison operation.
     False
     True
 
+Dyn
+---
+
+This filter accepts a resolver parameter, which is any callable. Whether or not it matches a given event depends on the
+return value of the resolver. If the resolver returns a truthy value, then the filter matches. Otherwise, it doesn't.
+This is useful when your events have a more complex structure that can't really be handled by other existing filters.
+
+.. warning::
+    When using a dynamic filter, it's your job to make sure the functions you supply won't match the same events (and
+    if they do, to specify a :ref:`rank<Ranking Processors>` or an :ref:`invocation strategy<Invocation Strategy>`).
+
+With the Dyn filter, it's useful to use lambda functions because they fit nicely in one line and won't clutter your
+code. If you use lambda functions, the functions you create **must** accept a single argument (which will be the event).
+
+.. testcode::
+
+    from event_processor.filters import Dyn
+
+    a_len_is_0 = Dyn(lambda e: len(e.get("a", [])) == 0)
+    a_len_is_bigger = Dyn(lambda e: len(e.get("a", [])) >= 1)
+
+    print(a_len_is_0.matches({"a": []}))
+    print(a_len_is_0.matches({"a": [0]}))
+    print(a_len_is_bigger.matches({"a": []}))
+    print(a_len_is_bigger.matches({"a": [0, 1]}))
+
+.. testoutput::
+
+    True
+    False
+    False
+    True
+
+It's also possible to use standard functions with the Dyn filter, in which case you can specify any argument that would
+be valid for a dependency (see :ref:`Dependencies` for details). For example :
+
+.. testcode::
+
+    from event_processor import Depends, Event
+    from event_processor.filters import Dyn
+
+    def my_dependency():
+        return 0
+
+    def my_filter_resolver(event: Event, dep_value: int = Depends(my_dependency)):
+        return event["key"] == dep_value
+
+    a_filter = Dyn(my_filter_resolver)
+
+    print(a_filter.matches({"key": 0}))
+    print(a_filter.matches({"key": 1}))
+
+.. testoutput::
+
+    True
+    False
+
 And
 ---
 

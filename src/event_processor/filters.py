@@ -2,6 +2,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Union, Callable
 
+from .dependencies import call_with_injection, Event
+from .exceptions import FilterError
 from .util import get_value_at_path
 
 
@@ -190,6 +192,38 @@ class Geq(NumCmp):
     @staticmethod
     def _compare(event_value: float, target_value: float) -> bool:
         return event_value >= target_value
+
+
+class Dyn(Filter):
+    """Accept events based on a dynamic condition which is resolved by a callable.
+
+    Note that the equality check with this filter is a bit special. The filter will only be equal if the resolver is
+    the same (two functions with the same code are not equal, they need to be the same object in memory).
+
+    This means that when using this filter, you should be careful to either re-use the same function as a resolver or
+    make sure the functions have different behaviors. Otherwise, be sure to use processor ranking and invocation
+    strategies.
+    """
+
+    def __init__(self, resolver: Callable):
+        if not callable(resolver):
+            raise FilterError("The resolver for a dyn filter must be callable")
+
+        self.resolver = resolver
+
+    def matches(self, event: dict) -> bool:
+        if hasattr(self.resolver, "__name__") and self.resolver.__name__ == "<lambda>":
+            return bool(self.resolver(event))
+
+        return bool(call_with_injection(self.resolver, event=Event(event), cache={}))
+
+    def __hash__(self):
+        return hash(self.resolver)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            return self.resolver == other.resolver
+        return False
 
 
 class And(Filter):
