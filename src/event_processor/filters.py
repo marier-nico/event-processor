@@ -213,9 +213,9 @@ class Dyn(Filter):
 
     def matches(self, event: dict) -> bool:
         if hasattr(self.resolver, "__name__") and self.resolver.__name__ == "<lambda>":
-            return self.resolver(event)
+            return bool(self.resolver(event))
 
-        return call_with_injection(self.resolver, event=Event(event), cache={})
+        return bool(call_with_injection(self.resolver, event=Event(event), cache={}))
 
     def __hash__(self):
         return hash(self.resolver)
