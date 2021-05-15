@@ -1,8 +1,10 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from src.event_processor.filters import Exists, Accept, Eq, And, Or, Lt, NumCmp, Leq, Gt, Geq
+from src.event_processor.dependencies import Event
+from src.event_processor.exceptions import FilterError
+from src.event_processor.filters import Exists, Accept, Eq, And, Or, Lt, NumCmp, Leq, Gt, Geq, Dyn
 
 
 def test_filter_and_creates_and_filter():
@@ -422,6 +424,81 @@ def test_geq_filter_does_not_match_when_value_is_not_a_float():
     assert result is False
 
 
+def test_dyn_filter_raises_when_resolver_is_not_callable():
+    with pytest.raises(FilterError):
+        Dyn("not-callable")
+
+
+def test_dyn_filter_matches_when_callable_returns_true():
+    mock_callable = Mock(return_value=True)
+    filter_ = Dyn(mock_callable)
+
+    result = filter_.matches({})
+
+    assert result is True
+
+
+def test_dyn_filter_matches_when_callable_returns_value():
+    mock_callable = Mock(return_value=False)
+    filter_ = Dyn(mock_callable)
+
+    result = filter_.matches({})
+
+    assert result is False
+
+
+def test_dyn_filter_injects_event_when_callable_is_a_lambda():
+    mock_event = Mock()
+    filter_ = Dyn(lambda e: e is mock_event)
+
+    result = filter_.matches(mock_event)
+
+    assert result is True
+
+
+@patch("src.event_processor.filters.call_with_injection")
+def test_dyn_filter_calls_with_injection_when_callable_is_not_a_lambda(call_with_injection_mock):
+    def dyn_filter():
+        pass
+
+    filter_ = Dyn(dyn_filter)
+
+    filter_.matches({})
+    call_with_injection_mock.assert_called_once_with(dyn_filter, event=Event({}), cache={})
+
+
+def test_dyn_filter_hash_is_resolver_hash():
+    def dyn_filter():
+        pass
+
+    filter_ = Dyn(dyn_filter)
+
+    assert hash(filter_) == hash(dyn_filter)
+
+
+def test_eq_filter_matches_when_resolvers_are_equal():
+    mock_resolver = Mock()
+
+    filter_a = Dyn(mock_resolver)
+    filter_b = Dyn(mock_resolver)
+
+    assert filter_a == filter_b
+
+
+def test_eq_filter_does_not_match_when_resolvers_are_different():
+    filter_a = Dyn(lambda: 0)
+    filter_b = Dyn(lambda: 0)
+
+    assert not (filter_a == filter_b)
+
+
+def test_eq_filter_does_not_match_when_other_is_not_a_dyn_filter():
+    mock_resolver = Mock()
+    filter_ = Dyn(mock_resolver)
+
+    assert not (filter_ == "x")
+
+
 def test_and_filter_matches_when_all_filters_match():
     test_filter = And(Exists("a"), Exists("b"), Eq("c", "d"))
 
@@ -444,6 +521,17 @@ def test_and_filter_does_not_match_when_one_filter_does_not_match():
     result = test_filter.matches({"a": 0})
 
     assert result is False
+
+
+def test_and_filter_is_short_circuiting_when_one_sub_filter_does_not_match():
+    test_filter = And(Exists("a"), Exists("b"), Dyn(lambda e: e["nonexistent"]))
+    test_filter_shorthand = Exists("a") & Exists("b") & Dyn(lambda e: e["nonexistent"])
+
+    result = test_filter.matches({"a": 0})
+    result_shorthand = test_filter_shorthand.matches({"a": 0})
+
+    assert result is False
+    assert result_shorthand is False
 
 
 def test_and_filter_is_equal_when_sub_filters_are_equal():
@@ -509,6 +597,17 @@ def test_or_filter_does_not_match_when_no_filters_match():
     result = test_filter.matches({"x": "not-y"})
 
     assert result is False
+
+
+def test_or_filter_is_short_circuiting_when_one_filter_matches():
+    test_filter = Or(Exists("a"), Exists("b"), Dyn(lambda e: e["nonexistent"]))
+    test_filter_shorthand = Exists("a") | Exists("b") | Dyn(lambda e: e["nonexistent"])
+
+    result = test_filter.matches({"b": 0})
+    result_shorthand = test_filter_shorthand.matches({"b": 0})
+
+    assert result is True
+    assert result_shorthand is True
 
 
 def test_or_filter_is_equal_when_sub_filters_are_equal():

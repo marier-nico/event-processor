@@ -5,7 +5,7 @@ import pytest
 from src.event_processor.invocation_strategies import InvocationStrategies
 from src.event_processor.dependencies import Event, Depends
 from src.event_processor.event_processor import EventProcessor
-from src.event_processor.filters import Eq, Exists, Accept
+from src.event_processor.filters import Eq, Exists, Accept, Dyn
 
 
 @pytest.fixture
@@ -133,3 +133,48 @@ def test_ambiguous_filters_with_no_rank_and_non_default_invocation_strategy():
 
     mock_a.assert_not_called()
     mock_b.assert_not_called()
+
+
+def test_dynamic_filters_with_lambda_function(event_processor):
+    filter_a = Dyn(lambda e: e["messages"][0].get("process") is True)
+    mock_a = Mock()
+    mock_b = Mock()
+
+    @event_processor.processor(Accept(), rank=-1)
+    def default_processor():
+        mock_b()
+
+    @event_processor.processor(filter_a)
+    def a_processor():
+        mock_a()
+
+    event_processor.invoke({"messages": [{"process": True}]})
+    event_processor.invoke({"messages": [{"process": False}]})
+
+    mock_a.assert_called_once()
+    mock_b.assert_called_once()
+
+
+def test_dynamic_filters_with_dedicated_function(event_processor):
+    mock_a = Mock()
+    mock_b = Mock()
+
+    def some_dependency():
+        return 0
+
+    def my_filter(event: Event, dep_value: int = Depends(some_dependency)):
+        return event["key"] == dep_value
+
+    @event_processor.processor(Dyn(my_filter))
+    def my_processor():
+        mock_a()
+
+    @event_processor.processor(Accept(), rank=-1)
+    def default_processor():
+        mock_b()
+
+    event_processor.invoke({"key": 0})
+    event_processor.invoke({"key": 1})
+
+    mock_a.assert_called_once()
+    mock_b.assert_called_once()
