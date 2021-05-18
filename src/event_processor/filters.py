@@ -118,7 +118,7 @@ class NumCmp(Filter):
     """Accept events when the comparator returns True.
 
     If you use this processor, make sure that you don't use equal (and not identical) comparators for the same path.
-    For example, don't use the same lambda in two different places. Instead, use a function, and pass a reference to
+    For examples, don't use the same lambda in two different places. Instead, use a function, and pass a reference to
     that function. If you don't do that, the filters will effectively be different (even if they match the same thing),
     leading to perhaps unexpected results.
     """
