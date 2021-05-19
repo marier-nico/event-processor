@@ -1,4 +1,5 @@
 - v2.4.0: Support scalar value dependencies in processor parameters
+- v2.3.1: Raise the correct exception when processor parameters are invalid due to optional args
 - v2.3.0: Support dynamic filters
 - v2.2.0: Support pydantic models as processor dependencies
 - v2.1.1: Fix negative ranks and document the -1 rank usage

@@ -149,7 +149,9 @@ def get_pydantic_dependencies(callable_: Callable) -> Dict[str, "BaseModel"]:
     if _has_pydantic:
         signature = inspect.signature(callable_)
         return {
-            name: arg.annotation for name, arg in signature.parameters.items() if issubclass(arg.annotation, BaseModel)
+            name: arg.annotation
+            for name, arg in signature.parameters.items()
+            if inspect.isclass(arg.annotation) and issubclass(arg.annotation, BaseModel)
         }
     else:
         return {}

@@ -269,6 +269,15 @@ def test_get_required_dependencies_returns_empty_list_for_no_dependencies():
     assert dependencies == {}
 
 
+def test_get_required_dependencies_returns_empty_list_for_non_dependency_param():
+    def fn(_: Optional[str] = Optional[str]):
+        pass
+
+    dependencies = get_required_dependencies(fn)
+
+    assert dependencies == {}
+
+
 def test_get_required_dependencies_returns_all_specified_dependencies():
     dependency = Depends(lambda: 0)
     other_dependency = Depends(lambda: 1)
@@ -298,6 +307,15 @@ def test_get_event_dependencies_returns_empty_list_for_no_event_dependencies():
     assert param == []
 
 
+def test_get_event_dependencies_returns_empty_list_for_non_event_dependencies():
+    def fn(_: Optional[str]):
+        pass
+
+    param = get_event_dependencies(fn)
+
+    assert param == []
+
+
 def test_get_pydantic_dependencies_returns_dependencies_when_they_are_specified():
     class Thing(BaseModel):
         pass
@@ -312,6 +330,15 @@ def test_get_pydantic_dependencies_returns_dependencies_when_they_are_specified(
 
 def test_get_pydantic_dependencies_returns_no_dependencies_when_none_are_specified():
     def fn():
+        pass
+
+    dependencies = get_pydantic_dependencies(fn)
+
+    assert dependencies == {}
+
+
+def test_get_pydantic_dependencies_returns_no_dependencies_for_non_pydantic_dependencies():
+    def fn(_: Optional[str]):
         pass
 
     dependencies = get_pydantic_dependencies(fn)
