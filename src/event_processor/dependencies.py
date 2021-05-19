@@ -3,7 +3,7 @@ import inspect
 import typing
 from typing import Callable, Any, Optional, Dict, Tuple, List
 
-from src.event_processor.exceptions import DependencyError
+from .exceptions import DependencyError
 
 try:
     from pydantic import BaseModel, create_model

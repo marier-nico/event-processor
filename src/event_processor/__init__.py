@@ -5,5 +5,6 @@ from .exceptions import (  # noqa
     EventProcessorError,
     FilterError,
     InvocationError,
+    DependencyError,
 )
 from .invocation_strategies import InvocationStrategies  # noqa
