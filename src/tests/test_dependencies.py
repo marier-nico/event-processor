@@ -361,7 +361,7 @@ def test_get_pydantic_dependencies_returns_none_even_when_present_if_pydantic_is
 def test_resolve_scalar_value_dependencies_resolves_without_pydantic_when_pydantic_is_not_installed(resolve_mock):
     params = [inspect.Parameter("x", kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    resolve_scalar_value_dependencies(params, {})
+    resolve_scalar_value_dependencies(params, Event({}))
 
     resolve_mock.assert_called_once_with(params, {})
 
@@ -371,7 +371,7 @@ def test_resolve_scalar_value_dependencies_resolves_without_pydantic_when_pydant
 def test_resolve_scalar_value_dependencies_resolves_with_pydantic_when_pydantic_is_installed(resolve_mock):
     params = [inspect.Parameter("x", kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    resolve_scalar_value_dependencies(params, {})
+    resolve_scalar_value_dependencies(params, Event({}))
 
     resolve_mock.assert_called_once_with(params, {})
 
@@ -386,7 +386,7 @@ def test_get_scalar_value_dependencies_returns_empty_dict_for_no_dependencies():
 
 
 def test_get_scalar_value_dependencies_does_not_return_variable_arguments():
-    def fn(x, *args, **kwargs):
+    def fn(_x, *_args, **_kwargs):
         pass
 
     dependencies = get_scalar_value_dependencies(fn)
@@ -407,9 +407,18 @@ def test_resolve_scalar_value_dependencies_without_pydantic_fetches_values_from_
     event = {"x": 0}
     scalar_dependencies = [inspect.Parameter("x", kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    result = resolve_scalar_value_dependencies_without_pydantic(scalar_dependencies, event)
+    result = resolve_scalar_value_dependencies_without_pydantic(scalar_dependencies, Event(event))
 
     assert result == {"x": 0}
+
+
+def test_resolve_scalar_value_dependencies_without_pydantic_does_not_fail_on_none_value():
+    event = {"x": None}
+    scalar_dependencies = [inspect.Parameter("x", kind=inspect.Parameter.POSITIONAL_ONLY)]
+
+    result = resolve_scalar_value_dependencies_without_pydantic(scalar_dependencies, Event(event))
+
+    assert result == {"x": None}
 
 
 def test_resolve_scalar_value_dependencies_without_pydantic_raises_on_missing_arg_value():
@@ -417,14 +426,14 @@ def test_resolve_scalar_value_dependencies_without_pydantic_raises_on_missing_ar
     scalar_dependencies = [inspect.Parameter("x", annotation=int, kind=inspect.Parameter.POSITIONAL_ONLY)]
 
     with pytest.raises(DependencyError):
-        resolve_scalar_value_dependencies_without_pydantic(scalar_dependencies, event)
+        resolve_scalar_value_dependencies_without_pydantic(scalar_dependencies, Event(event))
 
 
 def test_resolve_scalar_value_dependencies_with_pydantic_fetches_values_from_event():
     event = {"x": 0}
     scalar_dependencies = [inspect.Parameter("x", annotation=int, kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, event)
+    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event(event))
 
     assert result == {"x": 0}
 
@@ -434,7 +443,7 @@ def test_resolve_scalar_value_dependencies_with_pydantic_raises_on_missing_arg_v
     scalar_dependencies = [inspect.Parameter("x", annotation=int, kind=inspect.Parameter.POSITIONAL_ONLY)]
 
     with pytest.raises(ValidationError):
-        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, event)
+        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event(event))
 
 
 def test_resolve_scalar_value_dependencies_with_pydantic_raises_on_validation_errors():
@@ -442,7 +451,7 @@ def test_resolve_scalar_value_dependencies_with_pydantic_raises_on_validation_er
     scalar_dependencies = [inspect.Parameter("x", annotation=int, kind=inspect.Parameter.POSITIONAL_ONLY)]
 
     with pytest.raises(ValidationError):
-        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, event)
+        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event(event))
 
 
 def test_resolve_scalar_value_dependencies_with_pydantic_raises_on_validation_errors_for_pydantic_field_types():
@@ -450,7 +459,7 @@ def test_resolve_scalar_value_dependencies_with_pydantic_raises_on_validation_er
     scalar_dependencies = [inspect.Parameter("x", annotation=Color, kind=inspect.Parameter.POSITIONAL_ONLY)]
 
     with pytest.raises(ValidationError):
-        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, event)
+        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event(event))
 
 
 @pytest.mark.parametrize("event_val", ["some-string", {"a": "dict"}])
@@ -458,7 +467,7 @@ def test_resolve_scalar_value_dependencies_with_pydantic_accepts_any_without_ann
     event = {"x": event_val}
     scalar_dependencies = [inspect.Parameter("x", kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, event)
+    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event(event))
 
     assert result["x"] == event_val
 
@@ -467,13 +476,13 @@ def test_resolve_scalar_value_dependencies_with_pydantic_makes_values_required_w
     scalar_dependencies = [inspect.Parameter("x", kind=inspect.Parameter.POSITIONAL_ONLY)]
 
     with pytest.raises(ValidationError):
-        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, {})
+        resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event({}))
 
 
 def test_resolve_scalar_value_dependencies_with_pydantic_makes_values_optional_when_a_default_is_provided():
     scalar_dependencies = [inspect.Parameter("x", default="default", kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, {})
+    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event({}))
 
     assert result["x"] == "default"
 
@@ -481,6 +490,6 @@ def test_resolve_scalar_value_dependencies_with_pydantic_makes_values_optional_w
 def test_resolve_scalar_value_dependencies_with_pydantic_passes_none_to_unfilled_optionals():
     scalar_dependencies = [inspect.Parameter("x", annotation=Optional[str], kind=inspect.Parameter.POSITIONAL_ONLY)]
 
-    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, {})
+    result = resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, Event({}))
 
     assert result["x"] is None
