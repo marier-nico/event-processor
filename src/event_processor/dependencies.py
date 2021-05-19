@@ -204,10 +204,10 @@ def resolve_scalar_value_dependencies_without_pydantic(
     """
     resolved = {}
     for param in scalar_dependencies:
-        if event.get(param.name) is None:
+        try:
+            resolved[param.name] = event[param.name]
+        except KeyError:
             raise DependencyError(f"No value found in event for param '{param.name}'")
-
-        resolved[param.name] = event[param.name]
 
     return resolved
 
