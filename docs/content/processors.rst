@@ -6,6 +6,13 @@ Processors
 Processors are the least involved part of the library. All you have to do is register your processors into an event
 processor so that events can be dispatched to it.
 
+Parameters
+----------
+
+You can't specify just any random parameters for your processors, event-processor needs to know what to do with them
+when invoking your processor. The parameters that your processor can accept are documented in the :ref:`Dependencies`
+section!
+
 Multiple Event Processors
 -------------------------
 

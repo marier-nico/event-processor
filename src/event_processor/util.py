@@ -1,3 +1,4 @@
+import typing
 from typing import Any
 
 
@@ -14,3 +15,14 @@ def get_value_at_path(source: dict, path: str) -> Any:
         current_location = current_location[part]
 
     return current_location
+
+
+def py37_get_args(type_):
+    if type_ is not typing.Generic:
+        return getattr(type_, "__args__", ())
+    else:
+        return typing.Generic
+
+
+def py37_get_origin(type_):
+    return getattr(type_, "__origin__", None)

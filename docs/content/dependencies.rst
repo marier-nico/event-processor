@@ -251,3 +251,67 @@ Here's a simple example to illustrate how the event might be parsed for use in a
 
 You can also add custom validations for fields using `validators <https://pydantic-docs.helpmanual.io/usage/validators/>`_
 as well as many other things. Take a look at the pydantic docs to learn more!
+
+
+Scalar Dependencies
+-------------------
+
+Sometimes, you don't need many parts of an input event, just one or two fields, so depending on the whole event or
+having to make a pydantic model just for a few fields might feel excessive. This is what scalar dependencies are good
+for.
+
+.. warning::
+    If you want to benefit from type validation for your scalar dependencies, you need to have pydantic installed. If
+    you don't have pydantic, no types will be validated for scalar dependencies (really, not even basic ones).
+
+    Also, if you *do* use pydantic, but don't specify a type annotation for a parameter, then ``typing.Any`` is assumed.
+
+Here's a very basic example :
+
+.. testcode::
+
+    from event_processor import EventProcessor
+    from event_processor.filters import Exists
+
+    event_processor = EventProcessor()
+
+
+    @event_processor.processor(Exists("email"))
+    def handle_user(email: str):
+        print(email)
+
+
+    event_processor.invoke({"email": "someone@example.com"})
+
+.. testoutput::
+
+    someone@example.com
+
+Here's an example with a pydantic field type :
+
+.. testcode::
+
+    from event_processor import EventProcessor
+    from event_processor.filters import Exists
+    from pydantic import ValidationError
+    from pydantic.color import Color
+
+    event_processor = EventProcessor()
+
+
+    @event_processor.processor(Exists("my_color"))
+    def handle_user(my_color: Color):
+        print(my_color.as_hex())
+
+
+    event_processor.invoke({"my_color": "white"})
+
+    try:
+        event_processor.invoke({"my_color": "not-a-color"})
+    except ValidationError as e:
+        print(e.errors()[0]["msg"])
+
+.. testoutput::
+
+    #fff
+    value is not a valid color: string not recognised as a valid color
