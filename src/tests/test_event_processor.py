@@ -63,7 +63,7 @@ def test_processor_raises_exception_when_the_processor_takes_invalid_params(even
     with pytest.raises(FilterError):
 
         @event_processor.processor(Accept())
-        def fn(_x):
+        def fn(*_args):
             pass
 
 
@@ -164,14 +164,14 @@ def test_invoke_calls_negative_rank_as_fallback(event_processor):
 
 
 def test_processor_params_are_valid_returns_true_for_valid_params():
-    def processor(_a: Event, _b: Event, _c: BaseModel, _d=Depends(Mock())):
+    def processor(_a: Event, _b: Event, _c: BaseModel, _d: str, _e=Depends(Mock())):
         pass
 
     assert processor_params_are_valid(processor) is True
 
 
 def test_processor_params_are_valid_returns_false_for_invalid_params():
-    def processor(_a: Event, _b: Event, _c: BaseModel, _d=Depends(Mock()), _e=0):
+    def processor(_a: Event, _b: Event, _c: BaseModel, _d=Depends(Mock()), *_args, **_kwargs):
         pass
 
     assert processor_params_are_valid(processor) is False

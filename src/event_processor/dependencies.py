@@ -1,13 +1,22 @@
 """Dependency injection and management facilities."""
 import inspect
+import typing
 from typing import Callable, Any, Optional, Dict, Tuple, List
 
+from src.event_processor.exceptions import DependencyError
+
 try:
-    from pydantic import BaseModel
+    from pydantic import BaseModel, create_model
 
     _has_pydantic = True
 except ImportError:  # pragma: no cover
     _has_pydantic = False
+
+try:
+    from typing import get_args, get_origin
+except ImportError:  # pragma: no cover
+    from src.event_processor.util import py37_get_origin as get_origin
+    from src.event_processor.util import py37_get_args as get_args
 
 
 class Event(dict):
@@ -90,6 +99,14 @@ def resolve(
         resolved_dependencies[arg_name], cacheable_dep = resolve(required_dependency, event=event, cache=cache)
         cacheable = cacheable and cacheable_dep
 
+    scalar_dependencies = [
+        dependency
+        for dependency in get_scalar_value_dependencies(dependency.callable)
+        if dependency.name not in resolved_dependencies
+    ]
+    resolved_scalar_dependencies = resolve_scalar_value_dependencies(scalar_dependencies, event=event)
+    resolved_dependencies.update(resolved_scalar_dependencies)
+
     value = dependency.callable(**resolved_dependencies)
 
     if cache is not None and cacheable:
@@ -136,3 +153,89 @@ def get_pydantic_dependencies(callable_: Callable) -> Dict[str, "BaseModel"]:
         }
     else:
         return {}
+
+
+def get_scalar_value_dependencies(callable_: Callable) -> List[inspect.Parameter]:
+    """Get the scalar value dependencies for a callable.
+
+    :param callable_: The callable for which to get dependencies
+    :return: A view of the parameters that represent dependencies
+    """
+    signature = inspect.signature(callable_)
+    return [
+        param for param in signature.parameters.values() if param.kind not in {param.VAR_POSITIONAL, param.VAR_KEYWORD}
+    ]
+
+
+def resolve_scalar_value_dependencies(
+    scalar_dependencies: List[inspect.Parameter], event: Optional[Event]
+) -> Dict[str, Any]:
+    """Resolve the scalar dependencies to values contained in the event.
+
+    Values will be resolved differently depending on whether or not pydantic is installed.
+
+    :param scalar_dependencies: The dependencies to resolve
+    :param event: The event from which to get values
+    :return: A new dict with resolved dependency values
+    """
+    if event is None:
+        event = Event({})
+
+    if _has_pydantic:
+        return resolve_scalar_value_dependencies_with_pydantic(scalar_dependencies, event)
+    else:
+        return resolve_scalar_value_dependencies_without_pydantic(scalar_dependencies, event)
+
+
+def resolve_scalar_value_dependencies_without_pydantic(
+    scalar_dependencies: List[inspect.Parameter], event: Event
+) -> Dict[str, Any]:
+    """Resolve the scalar dependencies to values contained in the event without using pydantic.
+
+    This function does not validate the types of values passed into the event to ensure they match
+    the type annotations of the dependencies. To get validation for those types, make sure pydantic
+    is installed.
+
+    :param scalar_dependencies: The dependencies to resolve
+    :param event: The event from which to get values
+    :return: A new dict with resolved dependency values
+    """
+    resolved = {}
+    for param in scalar_dependencies:
+        if event.get(param.name) is None:
+            raise DependencyError(f"No value found in event for param '{param.name}'")
+
+        resolved[param.name] = event[param.name]
+
+    return resolved
+
+
+def resolve_scalar_value_dependencies_with_pydantic(
+    scalar_dependencies: List[inspect.Parameter], event: Event
+) -> Dict[str, Any]:
+    """Resolve the scalar dependencies to values contained in the event with pydantic.
+
+    This function does validation for the types of values passed into the event. Since this uses
+    pydantic, it's possible to use any pydantic types such as PaymentCardNumber, for example.
+
+    :param scalar_dependencies: The dependencies to resolve
+    :param event: The event from which to get values
+    :return: A new dict with resolved and validated dependency values
+    """
+    model_params = {}
+    for param in scalar_dependencies:
+        param_type = Any if param.annotation is inspect.Parameter.empty else param.annotation
+        if param.default is inspect.Parameter.empty:
+            if get_origin(param_type) is typing.Union and type(None) in get_args(param_type):
+                param_default = None
+            else:
+                param_default = ...
+        else:
+            param_default = param.default
+
+        model_params[param.name] = (param_type, param_default)
+
+    pydantic_model = create_model("ScalarDependencies", **model_params)  # type: ignore
+    filled_model = pydantic_model(**event)
+
+    return filled_model.dict()

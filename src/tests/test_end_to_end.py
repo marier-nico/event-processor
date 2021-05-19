@@ -1,11 +1,12 @@
 from unittest.mock import Mock
 
 import pytest
+from pydantic.color import Color
 
-from src.event_processor.invocation_strategies import InvocationStrategies
 from src.event_processor.dependencies import Event, Depends
 from src.event_processor.event_processor import EventProcessor
 from src.event_processor.filters import Eq, Exists, Accept, Dyn
+from src.event_processor.invocation_strategies import InvocationStrategies
 
 
 @pytest.fixture
@@ -178,3 +179,23 @@ def test_dynamic_filters_with_dedicated_function(event_processor):
 
     mock_a.assert_called_once()
     mock_b.assert_called_once()
+
+
+def test_scalar_dependencies_for_basic_values(event_processor):
+    @event_processor.processor(Accept())
+    def my_processor(my_value: str):
+        return my_value
+
+    result = event_processor.invoke({"my_value": "asdf"})
+
+    assert result == "asdf"
+
+
+def test_scalar_dependencies_for_pydantic_field_types(event_processor):
+    @event_processor.processor(Accept())
+    def my_processor(my_color: Color):
+        return my_color
+
+    result = event_processor.invoke({"my_color": "#ffffff"})
+
+    assert result.as_named() == "white"

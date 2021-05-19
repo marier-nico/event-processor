@@ -11,3 +11,7 @@ class FilterError(EventProcessorError):
 
 class InvocationError(EventProcessorError):
     """Exception for failures in invocation."""
+
+
+class DependencyError(EventProcessorError):
+    """Exceptions for failures while resolving dependencies."""

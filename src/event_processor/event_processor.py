@@ -2,7 +2,14 @@
 import inspect
 from typing import Dict, Callable, Any, Tuple
 
-from .dependencies import get_required_dependencies, get_event_dependencies, Event, Depends, get_pydantic_dependencies
+from .dependencies import (
+    get_required_dependencies,
+    get_event_dependencies,
+    Event,
+    Depends,
+    get_pydantic_dependencies,
+    get_scalar_value_dependencies,
+)
 from .exceptions import (
     FilterError,
     InvocationError,
@@ -81,7 +88,9 @@ def processor_params_are_valid(processor: Callable) -> bool:
     dependencies = get_required_dependencies(processor)
     event_dependencies = get_event_dependencies(processor)
     pydantic_dependencies = get_pydantic_dependencies(processor)
+    scalar_dependencies = get_scalar_value_dependencies(processor)
 
-    expected_dependency_count = len(dependencies) + len(event_dependencies) + len(pydantic_dependencies)
+    non_scalars = len(dependencies) + len(event_dependencies) + len(pydantic_dependencies)
+    scalars = len(scalar_dependencies) - non_scalars
 
-    return expected_dependency_count == len(inspect.signature(processor).parameters)
+    return scalars + non_scalars == len(inspect.signature(processor).parameters)
