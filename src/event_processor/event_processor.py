@@ -26,6 +26,14 @@ class EventProcessor:
         self.dependency_cache: Dict[Depends, Any] = {}
         self.invocation_strategy = invocation_strategy
 
+    def add_subprocessors(self, *subprocessors: "EventProcessor"):
+        """Add multiple subprocessors at once.
+
+        :param subprocessors: The tuple of subprocessors
+        """
+        for subprocessor in subprocessors:
+            self.add_subprocessor(subprocessor)
+
     def add_subprocessor(self, subprocessor: "EventProcessor"):
         """Add a subprocessor to this event processor
 

@@ -52,6 +52,11 @@ Sub-Processors
 In a big application, you might not want to have all your processors in the same module, so it's possible to setup
 sub-processors which get merged with a main processor.
 
+.. note::
+    You can also add multiple sub-processors in a single function call with the ``add_subprocessors()`` method. This
+    is really only for convenience and aesthetics, there's no functional difference with calling ``add_subprocessor()``
+    multiple times.
+
 ``my_module.py``
 
 .. testcode::

@@ -28,6 +28,17 @@ def test_add_subprocessor_adds_subprocessor(event_processor):
     assert len(event_processor.processors) == 1
 
 
+def test_add_subprocessors_can_add_multiple_subprocessors_at_once(event_processor):
+    event_processor_1 = EventProcessor()
+    event_processor_2 = EventProcessor()
+    event_processor_1.processors[Accept(), 0] = lambda: 0
+    event_processor_2.processors[Accept(), 1] = lambda: 0
+
+    event_processor.add_subprocessors(event_processor_1, event_processor_2)
+
+    assert len(event_processor.processors) == 2
+
+
 def test_add_subprocessor_raises_for_existing_filters(event_processor):
     other_event_processor = EventProcessor()
     other_event_processor.processors[Accept(), 0] = lambda: 0
