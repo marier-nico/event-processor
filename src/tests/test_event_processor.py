@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from pydantic import BaseModel
@@ -17,6 +17,26 @@ MOD_PATH = "src.event_processor.event_processor"
 @pytest.fixture
 def event_processor():
     return EventProcessor()
+
+
+@patch(f"{MOD_PATH}.load_all_modules_in_package", return_value=[])
+def test_add_subprocessors_in_package_does_nothing_for_an_empty_package(event_processor):
+    event_processor.add_subprocessors_in_package(Mock())
+
+    assert len(event_processor.processors) == 0
+
+
+def test_add_subprocessors_in_package_adds_subprocessors_contained_in_modules(event_processor):
+    event_processor_1 = EventProcessor()
+    event_processor_2 = EventProcessor()
+    event_processor_1.processors[Accept(), 0] = lambda: 0
+    event_processor_2.processors[Accept(), 1] = lambda: 0
+    mock_modules = [Mock(x=event_processor_1), Mock(y=event_processor_2)]
+
+    with patch(f"{MOD_PATH}.load_all_modules_in_package", return_value=mock_modules):
+        event_processor.add_subprocessors_in_package(Mock())
+
+    assert len(event_processor.processors) == 2
 
 
 def test_add_subprocessor_adds_subprocessor(event_processor):

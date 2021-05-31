@@ -1,5 +1,8 @@
+import importlib
 import typing
-from typing import Any
+from pathlib import Path
+from types import ModuleType
+from typing import Any, List
 
 
 def get_value_at_path(source: dict, path: str) -> Any:
@@ -26,3 +29,12 @@ def py37_get_args(type_):
 
 def py37_get_origin(type_):
     return getattr(type_, "__origin__", None)
+
+
+def load_all_modules_in_package(package: ModuleType) -> List[ModuleType]:
+    modules = []
+    for module_file in Path(package.__path__[0]).glob("*.py"):  # type: ignore  # mypy issue #1422
+        module = importlib.import_module(f"{package.__name__}.{module_file.stem}")
+        modules.append(module)
+
+    return modules
