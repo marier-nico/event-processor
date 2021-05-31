@@ -106,6 +106,41 @@ sub-processors which get merged with a main processor.
 
     sub_processing!
 
+Package Sub-Processors
+----------------------
+
+When your application grows even further, you might end up with a larger collection of event processors spread across
+several modules. In this case, it becomes tedious to import each event processor from each of the modules manually. To
+make it easy to appropriately separate your processors, it's possible to automatically add all the processors found in
+all the modules contained within a given package.
+
+With the following directory structure, this is how it would work :
+
+.. code-block:: bash
+
+    project-root
+    └── src
+        └── processors
+            ├── my_module_1.py
+            ├── my_module_2.py
+            └── file4
+                └── my_module_3.py
+
+.. code-block:: python
+
+    from event_processor import EventProcessor
+
+    from src import processors
+
+    event_processor = EventProcessor()
+    event_processor.add_subprocessors_in_package(processors)
+
+.. note::
+    It's important not to just use a package name here, you need to use the actual package that you've imported. Also,
+    this will cause all the modules in the package to be imported, so be mindful of circular imports when using this
+    feature!
+
+
 Ranking Processors
 ------------------
 

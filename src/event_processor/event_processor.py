@@ -1,5 +1,6 @@
 """Contains the EventProcessor class."""
 import inspect
+from types import ModuleType
 from typing import Dict, Callable, Any, Tuple
 
 from .dependencies import (
@@ -16,6 +17,7 @@ from .exceptions import (
 )
 from .filters import Filter
 from .invocation_strategies import InvocationStrategies
+from .util import load_all_modules_in_package
 
 
 class EventProcessor:
@@ -25,6 +27,21 @@ class EventProcessor:
         self.processors: Dict[Tuple[Filter, int], Callable] = {}
         self.dependency_cache: Dict[Depends, Any] = {}
         self.invocation_strategy = invocation_strategy
+
+    def add_subprocessors_in_package(self, package: ModuleType):
+        """Add all the processors found in all modules of a package as subprocessors.
+
+        Note that you should specify an actual package, and not just the name of a package.
+
+        :param package: The package that should be searched for event processors
+        """
+        modules_in_package = load_all_modules_in_package(package)
+        for module in modules_in_package:
+            module_contents = dir(module)
+            for item_name in module_contents:
+                item = getattr(module, item_name)
+                if isinstance(item, EventProcessor):
+                    self.add_subprocessor(item)
 
     def add_subprocessors(self, *subprocessors: "EventProcessor"):
         """Add multiple subprocessors at once.

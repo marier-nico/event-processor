@@ -3,7 +3,7 @@ from unittest.mock import Mock, MagicMock
 
 import pytest
 
-from src.event_processor.util import get_value_at_path, py37_get_args, py37_get_origin
+from src.event_processor.util import get_value_at_path, py37_get_args, py37_get_origin, load_all_modules_in_package
 
 
 def test_get_value_at_path_gets_the_value_when_it_exists():
@@ -40,3 +40,15 @@ def test_py37_get_origin_returns_origin_for_type():
     result = py37_get_origin(mock_type)
 
     assert result == "some-origin"
+
+
+def test_load_all_modules_in_package():
+    from . import package_for_tests
+
+    result = load_all_modules_in_package(package_for_tests)
+
+    names = [mod.__name__.split(".")[-1] for mod in result]
+    assert len(result) == 3
+    assert "__init__" in names
+    assert "a_module" in names
+    assert "b_module" in names
