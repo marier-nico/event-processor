@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 from pydantic import BaseModel
 
+from src.event_processor.invocation_strategies import InvocationStrategies
 from src.event_processor.dependencies import Depends, Event
 from src.event_processor.event_processor import EventProcessor, processor_params_are_valid
 from src.event_processor.exceptions import (
@@ -192,6 +193,23 @@ def test_invoke_calls_negative_rank_as_fallback(event_processor):
 
     assert called_a is True
     assert called_b is False
+
+
+def test_invoke_sets_invoked_processor_names():
+    event_processor = EventProcessor(InvocationStrategies.ALL_MATCHES)
+
+    @event_processor.processor(Exists("a"))
+    def fn_a():
+        pass
+
+    @event_processor.processor(Exists("b"))
+    def fn_b():
+        pass
+
+    event_processor.invoke({"a": 0, "b": 0})
+
+    assert "fn_a" in event_processor.invoked_processor_names
+    assert "fn_b" in event_processor.invoked_processor_names
 
 
 def test_processor_params_are_valid_returns_true_for_valid_params():

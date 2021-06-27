@@ -255,6 +255,44 @@ To use a non-default invocation strategy, use the provided ``InvocationStrategie
     Processor a!
     Processor b!
 
+Processor Names
+---------------
+
+Sometimes, it might be useful to gather invoked processor names after they have been invoked, either to do something
+with the returned results depending on the processor that was invoked, or perhaps for logging purposes.
+
+You can access the invoked processor names like so :
+
+.. testcode::
+
+    from event_processor import EventProcessor, InvocationStrategies
+    from event_processor.filters import Exists, Eq
+
+    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.ALL_MATCHES)
+
+
+    @event_processor.processor(Exists("a"))
+    def processor_a():
+        pass
+
+
+    @event_processor.processor(Eq("a", "b"))
+    def processor_b():
+        pass
+
+
+    event_processor.invoke({"a": "b"})
+
+    print(event_processor.invoked_processor_names)
+
+.. testoutput::
+
+    ['processor_a', 'processor_b']
+
+.. note::
+    If, for any reason, the name of a processor is not available, it will be replaced by ``"unavailable"``. Also, if you
+    use the same name for multiple processors, you will find duplicate values for the invoked processor names.
+
 Caveats
 -------
 

@@ -1,3 +1,4 @@
+- v2.6.0: Support getting a list of invoked processors after an invocation
 - v2.5.0: Support adding multiple subprocessors at once and also adding all processors from all modules in a package
 - v2.4.1: Fix scalar dependency resolution without pydantic (only raise on actual missing values and not none values)
 - v2.4.0: Support scalar value dependencies in processor parameters
