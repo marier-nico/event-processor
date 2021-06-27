@@ -1,7 +1,7 @@
 """Contains the EventProcessor class."""
 import inspect
 from types import ModuleType
-from typing import Dict, Callable, Any, Tuple
+from typing import Dict, Callable, Any, Tuple, List
 
 from .dependencies import (
     get_required_dependencies,
@@ -27,6 +27,7 @@ class EventProcessor:
         self.processors: Dict[Tuple[Filter, int], Callable] = {}
         self.dependency_cache: Dict[Depends, Any] = {}
         self.invocation_strategy = invocation_strategy
+        self.invoked_processor_names: List[str] = []
 
     def add_subprocessors_in_package(self, package: ModuleType):
         """Add all the processors found in all modules of a package as subprocessors.
@@ -99,7 +100,16 @@ class EventProcessor:
                     matching.append(processor)
 
         if matching:
-            return self.invocation_strategy.value.invoke(matching, event=Event(event), cache=self.dependency_cache)
+            results = self.invocation_strategy.value.invoke(matching, event=Event(event), cache=self.dependency_cache)
+
+            invoked_names = []
+            returned_values = []
+            for invoked_name, returned_value in results:
+                invoked_names.append(invoked_name)
+                returned_values.append(returned_value)
+
+            self.invoked_processor_names = invoked_names
+            return returned_values[0] if len(returned_values) == 1 else tuple(returned_values)
         else:
             raise InvocationError(f"No matching processor for the event '{event}'")
 
