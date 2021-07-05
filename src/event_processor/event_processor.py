@@ -1,7 +1,7 @@
 """Contains the EventProcessor class."""
 import inspect
 from types import ModuleType
-from typing import Dict, Callable, Any, Tuple, List
+from typing import Dict, Callable, Any, Tuple, List, Union
 
 from .dependencies import (
     get_required_dependencies,
@@ -17,6 +17,7 @@ from .exceptions import (
 )
 from .filters import Filter
 from .invocation_strategies import InvocationStrategies
+from .result import Result
 from .util import load_all_modules_in_package
 
 
@@ -27,7 +28,6 @@ class EventProcessor:
         self.processors: Dict[Tuple[Filter, int], Callable] = {}
         self.dependency_cache: Dict[Depends, Any] = {}
         self.invocation_strategy = invocation_strategy
-        self.invoked_processor_names: List[str] = []
 
     def add_subprocessors_in_package(self, package: ModuleType):
         """Add all the processors found in all modules of a package as subprocessors.
@@ -83,7 +83,7 @@ class EventProcessor:
 
         return decorate
 
-    def invoke(self, event: Dict) -> Any:
+    def invoke(self, event: Dict) -> Union[Result, List[Result]]:
         """Invoke the correct processor for an event.
 
         There may be multiple processors invoked, depending on the invocation strategy.
@@ -100,16 +100,7 @@ class EventProcessor:
                     matching.append(processor)
 
         if matching:
-            results = self.invocation_strategy.value.invoke(matching, event=Event(event), cache=self.dependency_cache)
-
-            invoked_names = []
-            returned_values = []
-            for invoked_name, returned_value in results:
-                invoked_names.append(invoked_name)
-                returned_values.append(returned_value)
-
-            self.invoked_processor_names = invoked_names
-            return returned_values[0] if len(returned_values) == 1 else tuple(returned_values)
+            return self.invocation_strategy.value.invoke(matching, event=Event(event), cache=self.dependency_cache)
         else:
             raise InvocationError(f"No matching processor for the event '{event}'")
 

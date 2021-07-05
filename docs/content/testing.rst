@@ -50,8 +50,8 @@ Here's an example of how you might test a processor :
         return user_role == "admin"
 
 
-    print(event_processor.invoke({"email": "user@example.com"}))
-    print(event_processor.invoke({"email": "admin@example.com"}))
+    print(event_processor.invoke({"email": "user@example.com"}).returned_value)
+    print(event_processor.invoke({"email": "admin@example.com"}).returned_value)
 
 
     #################### Tests #####################

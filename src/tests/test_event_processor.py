@@ -124,7 +124,7 @@ def test_invoke_returns_the_processor_return_value(event_processor):
 
     result = event_processor.invoke({"a": 0})
 
-    assert result is result_mock
+    assert result.returned_value is result_mock
 
 
 def test_invoke_injects_event_into_processor(event_processor):
@@ -195,7 +195,7 @@ def test_invoke_calls_negative_rank_as_fallback(event_processor):
     assert called_b is False
 
 
-def test_invoke_sets_invoked_processor_names():
+def test_invoke_result_contains_processor_names():
     event_processor = EventProcessor(InvocationStrategies.ALL_MATCHES)
 
     @event_processor.processor(Exists("a"))
@@ -206,10 +206,10 @@ def test_invoke_sets_invoked_processor_names():
     def fn_b():
         pass
 
-    event_processor.invoke({"a": 0, "b": 0})
+    results = event_processor.invoke({"a": 0, "b": 0})
 
-    assert "fn_a" in event_processor.invoked_processor_names
-    assert "fn_b" in event_processor.invoked_processor_names
+    assert "fn_a" == results[0].processor_name
+    assert "fn_b" == results[1].processor_name
 
 
 def test_processor_params_are_valid_returns_true_for_valid_params():
