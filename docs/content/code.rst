@@ -7,20 +7,33 @@ Event Processor
 .. autoclass:: src.event_processor.event_processor.EventProcessor
    :members:
 
+Invocation Strategies
+---------------------
+
+.. automodule:: src.event_processor.invocation_strategies
+   :members:
+
+Results
+-------
+
+.. automodule:: src.event_processor.result
+   :members:
+
 Exceptions
 ----------
 
-.. automodule:: exceptions
+.. automodule:: src.event_processor.exceptions
    :members:
 
 Filtering
 ---------
 
-.. automodule:: filters
+.. automodule:: src.event_processor.filters
    :members:
 
 Dependency Injection
 --------------------
 
-.. automodule:: dependencies
+.. automodule:: src.event_processor.dependencies
    :members:
+

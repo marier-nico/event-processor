@@ -4,7 +4,7 @@ Processors
 ==========
 
 Processors are the least involved part of the library. All you have to do is register your processors into an event
-processor so that events can be dispatched to it.
+processor so that events can be dispatched to it. For a basic example, see the :ref:`Core Concepts`.
 
 Parameters
 ----------
@@ -12,6 +12,20 @@ Parameters
 You can't specify just any random parameters for your processors, event-processor needs to know what to do with them
 when invoking your processor. The parameters that your processor can accept are documented in the :ref:`Dependencies`
 section!
+
+Invocation
+----------
+
+When you invoke your event processor, event-processor takes care of running the correct function (or functions,
+depending on your invocation strategy). After running your function, it packs some information with the returned value
+into a :ref:`Results` object and returns that to the calling code.
+
+With the result, you can get the value returned by your function as well as the name of the processor that was invoked
+(the name of your function).
+
+The actual return value for the invocation depends on your invocation strategy. Whether you get a single value or a list
+returned from the invocation should be very obvious from the invocation strategy you're using. Essentially, if the
+strategy can call multiple processors, you get a list. If not, you get a single value.
 
 Multiple Event Processors
 -------------------------
