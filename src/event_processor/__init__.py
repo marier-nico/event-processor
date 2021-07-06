@@ -8,3 +8,4 @@ from .exceptions import (  # noqa
     DependencyError,
 )
 from .invocation_strategies import InvocationStrategies  # noqa
+from .result import Result  # noqa
