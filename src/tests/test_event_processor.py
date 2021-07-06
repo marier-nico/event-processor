@@ -218,6 +218,25 @@ def test_invoke_result_contains_processor_names():
     assert "fn_b" == results[1].processor_name
 
 
+def test_invoke_only_caches_for_each_invocation(event_processor):
+    counter = 0
+
+    def my_dependency():
+        nonlocal counter
+        counter = counter + 1
+        return counter
+
+    @event_processor.processor(Accept())
+    def fn_a(counter_dependency: int = Depends(my_dependency, cache=True)):
+        return counter_dependency
+
+    result_1 = event_processor.invoke({})
+    result_2 = event_processor.invoke({})
+
+    assert result_1.returned_value == 1
+    assert result_2.returned_value == 2
+
+
 def test_processor_params_are_valid_returns_true_for_valid_params():
     def processor(_a: Event, _b: Event, _c: BaseModel, _d: str, _e=Depends(Mock())):
         pass
