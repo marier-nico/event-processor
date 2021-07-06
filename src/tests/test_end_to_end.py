@@ -21,7 +21,7 @@ def test_simple_filtering(event_processor):
 
     result = event_processor.invoke({"top": {"mid": {"low": "val", "other": 1234}}})
 
-    assert result == "val"
+    assert result.returned_value == "val"
 
 
 @pytest.mark.parametrize("test_event, ret", [({"key": "val"}, "val"), ({"key": 123}, 123), ({"key": None}, None)])
@@ -32,7 +32,7 @@ def test_any_filter(test_event, ret, event_processor):
 
     result = event_processor.invoke(test_event)
 
-    assert result == ret
+    assert result.returned_value == ret
 
 
 def test_simple_pre_processing(event_processor):
@@ -45,7 +45,7 @@ def test_simple_pre_processing(event_processor):
 
     result = event_processor.invoke({"user": {"name": "John"}})
 
-    assert result == {"name": "John"}
+    assert result.returned_value == {"name": "John"}
 
 
 def test_processor_with_dependencies(event_processor):
@@ -60,7 +60,7 @@ def test_processor_with_dependencies(event_processor):
 
     result = event_processor.invoke({})
 
-    assert result is dependency_mock
+    assert result.returned_value is dependency_mock
 
 
 def test_pre_processor_with_dependencies(event_processor):
@@ -78,7 +78,7 @@ def test_pre_processor_with_dependencies(event_processor):
 
     result = event_processor.invoke({})
 
-    assert result is dependency_mock
+    assert result.returned_value is dependency_mock
 
 
 def test_ambiguous_filters_with_rank(event_processor):
@@ -188,7 +188,7 @@ def test_scalar_dependencies_for_basic_values(event_processor):
 
     result = event_processor.invoke({"my_value": "asdf"})
 
-    assert result == "asdf"
+    assert result.returned_value == "asdf"
 
 
 def test_scalar_dependencies_for_pydantic_field_types(event_processor):
@@ -198,4 +198,4 @@ def test_scalar_dependencies_for_pydantic_field_types(event_processor):
 
     result = event_processor.invoke({"my_color": "#ffffff"})
 
-    assert result.as_named() == "white"
+    assert result.returned_value.as_named() == "white"

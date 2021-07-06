@@ -14,6 +14,9 @@ how to use filters in practice, see the :ref:`core concepts<core-concepts-exampl
     Have a look at :ref:`Ranking Processors` to learn how to resolve these ambiguities. Also, note that these issues may
     not apply to your context. You only have to worry about this if you have ambiguous filters.
 
+    Also, you may actually want to run multiple processors for the same event. If this is the case, then you should look
+    at :ref:`Invocation Strategies<Invocation Strategy>` instead of ranking.
+
 Accept
 ------
 

@@ -4,7 +4,7 @@ Processors
 ==========
 
 Processors are the least involved part of the library. All you have to do is register your processors into an event
-processor so that events can be dispatched to it.
+processor so that events can be dispatched to it. For a basic example, see the :ref:`Core Concepts`.
 
 Parameters
 ----------
@@ -12,6 +12,20 @@ Parameters
 You can't specify just any random parameters for your processors, event-processor needs to know what to do with them
 when invoking your processor. The parameters that your processor can accept are documented in the :ref:`Dependencies`
 section!
+
+Invocation
+----------
+
+When you invoke your event processor, event-processor takes care of running the correct function (or functions,
+depending on your invocation strategy). After running your function, it packs some information with the returned value
+into a :ref:`Results` object and returns that to the calling code.
+
+With the result, you can get the value returned by your function as well as the name of the processor that was invoked
+(the name of your function).
+
+The actual return value for the invocation depends on your invocation strategy. Whether you get a single value or a list
+returned from the invocation should be very obvious from the invocation strategy you're using. Essentially, if the
+strategy can call multiple processors, you get a list. If not, you get a single value.
 
 Multiple Event Processors
 -------------------------
@@ -91,7 +105,7 @@ sub-processors which get merged with a main processor.
     from event_processor import EventProcessor
     from event_processor.filters import Accept
 
-    # from my_module.py import sub_processor
+    # from my_module import sub_processor
 
     main_processor = EventProcessor()
     main_processor.add_subprocessor(sub_processor)
@@ -100,7 +114,7 @@ sub-processors which get merged with a main processor.
     # but the event will be dispatched to the sub-processor.
     result = main_processor.invoke({})
 
-    print(result)
+    print(result.returned_value)
 
 .. testoutput:: processors
 
@@ -204,26 +218,27 @@ event, you have to choose an invocation strategy.
 First Match
 ___________
 
-This strategy calls the first matching processor (among those with the highest rank). It returns the processor's return
-value as-is.
+This strategy calls the first matching processor (among those with the highest rank). It returns a simple
+:ref:`Result<Results>`.
 
 All Matches
 ___________
 
-This strategy calls all the matching processors (that have the highest rank). It returns a tuple of results for all the
-processors (even if only a single match occurred).
+This strategy calls all the matching processors (that have the highest rank). It returns a list of
+:ref:`Result<Results>`, one for each matching processor (even if only a single match occurred).
 
 No Matches
 __________
 
-This strategy calls none of the matching processors if there are more than one (and returns none). Otherwise, it calls
-the single matching processor and returns its value as-is.
+This strategy calls none of the matching processors if there are more than one (and returns a :ref:`Result<Results>`
+with a ``None`` value). Otherwise, it calls the single matching processor and returns a :ref:`Result<Results>` with that
+result.
 
 No Matches Strict
 _________________
 
 This strategy calls none of the matching processors if there are more than one, and it raises an exception. Otherwise,
-it calls the single matching processors and returns its value as-is.
+it calls the single matching processors and returns a :ref:`Result<Results>` with the returned value.
 
 Example
 _______
@@ -254,51 +269,3 @@ To use a non-default invocation strategy, use the provided ``InvocationStrategie
 
     Processor a!
     Processor b!
-
-Processor Names
----------------
-
-Sometimes, it might be useful to gather invoked processor names after they have been invoked, either to do something
-with the returned results depending on the processor that was invoked, or perhaps for logging purposes.
-
-You can access the invoked processor names like so :
-
-.. testcode::
-
-    from event_processor import EventProcessor, InvocationStrategies
-    from event_processor.filters import Exists, Eq
-
-    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.ALL_MATCHES)
-
-
-    @event_processor.processor(Exists("a"))
-    def processor_a():
-        pass
-
-
-    @event_processor.processor(Eq("a", "b"))
-    def processor_b():
-        pass
-
-
-    event_processor.invoke({"a": "b"})
-
-    print(event_processor.invoked_processor_names)
-
-.. testoutput::
-
-    ['processor_a', 'processor_b']
-
-.. note::
-    If, for any reason, the name of a processor is not available, it will be replaced by ``"unavailable"``. Also, if you
-    use the same name for multiple processors, you will find duplicate values for the invoked processor names.
-
-Caveats
--------
-
-The main things to keep in mind for processors are :
-
-* The same filter can only be used by one processor.
-* It's possible to have ambiguous filters and those should be resolved with ranking.
-* Invocation strategies are used when the rank doesn't resolve ambiguous filters.
-

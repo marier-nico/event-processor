@@ -17,6 +17,13 @@ processor which will be computed from the result of another function of your cho
     These dependencies are cached by default, so if that's something you don't want, be sure to specify ``cache=False``
     in your dependency.
 
+.. warning::
+    Caching happens per-invocation, so if a sub-dependency is used by many dependencies, it will only be resolved once
+    per invocation. If you invoke the same processor again, the dependency will be invoked again.
+
+    If you want something to be cached permanently, you should look at
+    `python's cache decorator <https://docs.python.org/3/library/functools.html#functools.cache>`_.
+
 Simple Example
 ______________
 
@@ -42,49 +49,6 @@ ______________
 .. testoutput::
 
     42
-
-Caching Example
-_______________
-
-If a value should always be dynamic, caching can easily be disabled. Note that two dependencies can refer to the same
-callable to get a value, and will still honor the caching decision. That is, one call to the callable may be cached,
-whereas another may not.
-
-.. testcode::
-
-    from event_processor import EventProcessor, Depends
-    from event_processor.filters import Accept, Exists
-
-    event_processor = EventProcessor()
-    numeric_value = 0
-
-
-    def get_my_value():
-        global numeric_value
-        numeric_value = numeric_value + 1
-        return numeric_value
-
-
-    @event_processor.processor(Accept())
-    def my_processor_with_caching(my_value : int = Depends(get_my_value)):
-        print(my_value)
-
-
-    # Note the rank is required because otherwise Accept() will match anything
-    @event_processor.processor(Exists("a"), rank=1)
-    def my_processor_with_caching(my_value : int = Depends(get_my_value, cache=False)):
-        print(my_value)
-
-
-    event_processor.invoke({})
-    event_processor.invoke({})
-    event_processor.invoke({"a": 0})
-
-.. testoutput::
-
-    1
-    1
-    2
 
 Nesting Example
 _______________

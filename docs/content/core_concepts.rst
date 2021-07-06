@@ -68,8 +68,8 @@ a stub for the SSM client and assume that the ``admin_email`` parameter has a va
         admin_email = ssm_response["Parameter"]["Value"]
         return raw_event["user"]["email"] == admin_email
 
-    print("admin@example.com is admin:", event_processor.invoke({"user": {"email": "admin@example.com"}}))
-    print("user@example.com is admin:", event_processor.invoke({"user": {"email": "user@example.com"}}))
+    print("admin@example.com is admin:", event_processor.invoke({"user": {"email": "admin@example.com"}}).returned_value)
+    print("user@example.com is admin:", event_processor.invoke({"user": {"email": "user@example.com"}}).returned_value)
 
 .. testoutput:: core_concepts
 

@@ -19,9 +19,9 @@ def test_first_match_returns_invoked_processor_name():
     def processor_a():
         pass
 
-    invoked_name, _result = FirstMatch.invoke([processor_a])[0]
+    result = FirstMatch.invoke([processor_a])
 
-    assert invoked_name == "processor_a"
+    assert result.processor_name == "processor_a"
 
 
 def test_first_match_returns_unavailable_on_processor_without_name():
@@ -31,9 +31,9 @@ def test_first_match_returns_unavailable_on_processor_without_name():
     """
     processor_a = Mock()
 
-    invoked_name, _result = FirstMatch.invoke([processor_a])[0]
+    result = FirstMatch.invoke([processor_a])
 
-    assert invoked_name == "unavailable"
+    assert result.processor_name == "unavailable"
 
 
 def test_all_matches_invokes_all_matching_processors():
@@ -54,8 +54,8 @@ def test_all_matches_returns_invoked_processor_names():
 
     results = AllMatches.invoke([processor_a, processor_b])
 
-    assert results[0][0] == "processor_a"
-    assert results[1][0] == "processor_b"
+    assert results[0].processor_name == "processor_a"
+    assert results[1].processor_name == "processor_b"
 
 
 def test_no_matches_invokes_no_matching_processors_on_multiple_matches():
@@ -70,9 +70,9 @@ def test_no_matches_invokes_no_matching_processors_on_multiple_matches():
 def test_no_matches_returns_unavailable_processor_name_on_multiple_matches():
     processor_a, processor_b = Mock(), Mock()
 
-    invoked_name, _result = NoMatches.invoke([processor_a, processor_b])[0]
+    result = NoMatches.invoke([processor_a, processor_b])
 
-    assert invoked_name == "unavailable"
+    assert result.processor_name == "unavailable"
 
 
 def test_no_matches_invokes_the_matching_processor_on_a_single_match():
@@ -87,9 +87,9 @@ def test_no_matches_returns_the_processor_name_on_a_single_match():
     def processor_a():
         pass
 
-    invoked_name, _result = NoMatches.invoke([processor_a])[0]
+    result = NoMatches.invoke([processor_a])
 
-    assert invoked_name == "processor_a"
+    assert result.processor_name == "processor_a"
 
 
 def test_no_matches_strict_raises_when_multiple_processors_match():
@@ -111,6 +111,6 @@ def test_no_matches_strict_returns_the_processor_name_on_a_single_match():
     def processor_a():
         pass
 
-    invoked_name, _result = NoMatchesStrict.invoke([processor_a])[0]
+    result = NoMatchesStrict.invoke([processor_a])
 
-    assert invoked_name == "processor_a"
+    assert result.processor_name == "processor_a"
