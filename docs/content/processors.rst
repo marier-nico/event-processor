@@ -218,26 +218,27 @@ event, you have to choose an invocation strategy.
 First Match
 ___________
 
-This strategy calls the first matching processor (among those with the highest rank). It returns the processor's return
-value as-is.
+This strategy calls the first matching processor (among those with the highest rank). It returns a simple
+:ref:`Result<Results>`.
 
 All Matches
 ___________
 
-This strategy calls all the matching processors (that have the highest rank). It returns a tuple of results for all the
-processors (even if only a single match occurred).
+This strategy calls all the matching processors (that have the highest rank). It returns a list of
+:ref:`Result<Results>`, one for each matching processor (even if only a single match occurred).
 
 No Matches
 __________
 
-This strategy calls none of the matching processors if there are more than one (and returns none). Otherwise, it calls
-the single matching processor and returns its value as-is.
+This strategy calls none of the matching processors if there are more than one (and returns a :ref:`Result<Results>`
+with a ``None`` value). Otherwise, it calls the single matching processor and returns a :ref:`Result<Results>` with that
+result.
 
 No Matches Strict
 _________________
 
 This strategy calls none of the matching processors if there are more than one, and it raises an exception. Otherwise,
-it calls the single matching processors and returns its value as-is.
+it calls the single matching processors and returns a :ref:`Result<Results>` with the returned value.
 
 Example
 _______
@@ -268,13 +269,3 @@ To use a non-default invocation strategy, use the provided ``InvocationStrategie
 
     Processor a!
     Processor b!
-
-Caveats
--------
-
-The main things to keep in mind for processors are :
-
-* The same filter can only be used by one processor.
-* It's possible to have ambiguous filters and those should be resolved with ranking.
-* Invocation strategies are used when the rank doesn't resolve ambiguous filters.
-

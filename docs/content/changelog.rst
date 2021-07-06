@@ -1,4 +1,6 @@
-- v3.0.0: BREAKING CHANGE: The value returned by invoking a processor is now a Result.
+- v3.0.0:
+    - BREAKING CHANGE: The value returned by invoking a processor is now a Result.
+    - It's not possible to use identical or equivalent filters for different processors.
 - v2.6.0: Support getting a list of invoked processors after an invocation
 - v2.5.0: Support adding multiple subprocessors at once and also adding all processors from all modules in a package
 - v2.4.1: Fix scalar dependency resolution without pydantic (only raise on actual missing values and not none values)

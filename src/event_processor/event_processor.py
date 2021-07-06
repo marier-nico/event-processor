@@ -25,7 +25,7 @@ class EventProcessor:
     """A self-contained event processor."""
 
     def __init__(self, invocation_strategy: InvocationStrategies = InvocationStrategies.FIRST_MATCH):
-        self.processors: Dict[Tuple[Filter, int], Callable] = {}
+        self.processors: Dict[Tuple[Filter, int], List[Callable]] = {}
         self.dependency_cache: Dict[Depends, Any] = {}
         self.invocation_strategy = invocation_strategy
 
@@ -57,10 +57,11 @@ class EventProcessor:
 
         :param subprocessor: The other event processor to add
         """
-        for filter_with_rank, processor in subprocessor.processors.items():
+        for filter_with_rank, processors in subprocessor.processors.items():
             if filter_with_rank in self.processors:
-                raise FilterError(f"The filter '{filter_with_rank[0]}' is already handled by another processor")
-            self.processors[filter_with_rank] = processor
+                self.processors[filter_with_rank].extend(processors)
+            else:
+                self.processors[filter_with_rank] = processors
 
     def processor(self, event_filter: Filter, rank: int = 0):
         """Register a new processor with the given filter and rank.
@@ -75,10 +76,13 @@ class EventProcessor:
                     f"The processor '{fn}' expects some invalid parameters "
                     f"(only dependencies, the event and pydantic models (if pydantic is installed) are allowed)"
                 )
-            if (event_filter, rank) in self.processors:
-                raise FilterError(f"The filter '{event_filter}' ia already handled by another processor")
 
-            self.processors[(event_filter, rank)] = fn
+            filter_with_rank = (event_filter, rank)
+            if filter_with_rank in self.processors:
+                self.processors[filter_with_rank].append(fn)
+            else:
+                self.processors[filter_with_rank] = [fn]
+
             return fn
 
         return decorate
@@ -92,12 +96,12 @@ class EventProcessor:
         :return: The return value of the processor
         """
         matching, highest_rank = [], float("-inf")
-        for (filter_, rank), processor in self.processors.items():
+        for (filter_, rank), processors in self.processors.items():
             if filter_.matches(event):
                 if rank > highest_rank:
-                    matching, highest_rank = [processor], rank
+                    matching, highest_rank = processors, rank
                 elif rank == highest_rank:
-                    matching.append(processor)
+                    matching.extend(processors)
 
         if matching:
             return self.invocation_strategy.value.invoke(matching, event=Event(event), cache=self.dependency_cache)
