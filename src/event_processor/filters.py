@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Union, Callable
 
 from .dependencies import call_with_injection, Event
-from .exceptions import FilterError
+from .exceptions import FilterError, NoValueError
 from .util import get_value_at_path
 
 
@@ -78,7 +78,7 @@ class Exists(Filter):
     def matches(self, event: dict) -> bool:
         try:
             get_value_at_path(event, self.path)
-        except KeyError:
+        except NoValueError:
             return False
 
         return True
@@ -102,7 +102,7 @@ class Eq(Filter):
     def matches(self, event: dict) -> bool:
         try:
             return self.value == get_value_at_path(event, self.path)
-        except KeyError:
+        except NoValueError:
             return False
 
     def __hash__(self):
@@ -132,7 +132,7 @@ class NumCmp(Filter):
         try:
             found_value = get_value_at_path(event, self.path)
             float_value = float(found_value)
-        except (KeyError, ValueError):
+        except (NoValueError, ValueError):
             return False
 
         return self.comparator(float_value, self.target)
