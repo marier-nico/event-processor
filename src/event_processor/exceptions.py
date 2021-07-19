@@ -15,3 +15,7 @@ class InvocationError(EventProcessorError):
 
 class DependencyError(EventProcessorError):
     """Exceptions for failures while resolving dependencies."""
+
+
+class NoValueError(EventProcessorError):
+    """Exception for when a value is not present in a given context."""

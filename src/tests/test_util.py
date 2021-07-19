@@ -3,6 +3,7 @@ from unittest.mock import Mock, MagicMock
 
 import pytest
 
+from src.event_processor.exceptions import NoValueError
 from src.event_processor.util import get_value_at_path, py37_get_args, py37_get_origin, load_all_modules_in_package
 
 
@@ -18,8 +19,15 @@ def test_get_value_at_path_gets_the_value_when_it_exists():
 def test_get_value_at_path_raises_for_an_invalid_path():
     path = "a.b.c"
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NoValueError):
         get_value_at_path({"a": {"b": {"not-c": None}}}, path)
+
+
+def test_get_value_at_path_raises_for_none_value():
+    path = "a.b.c"
+
+    with pytest.raises(NoValueError):
+        get_value_at_path({"a": None}, path)
 
 
 def test_py37_get_args_returns_generic_for_generic_type():

@@ -4,6 +4,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, List
 
+from .exceptions import NoValueError
+
 
 def get_value_at_path(source: dict, path: str) -> Any:
     """Get the value in a source dict at the given path.
@@ -11,11 +13,14 @@ def get_value_at_path(source: dict, path: str) -> Any:
     :param source: The dict from which to extract the value
     :param path: The path to look into
     :return: The value found at the path
-    :raises: KeyError when no value exists at the path
+    :raises: NoValueError when no value exists at the path
     """
     current_location = source
     for part in path.split("."):
-        current_location = current_location[part]
+        try:
+            current_location = current_location[part]
+        except (KeyError, TypeError):
+            raise NoValueError(f"No value at the path '{path}'")
 
     return current_location
 
