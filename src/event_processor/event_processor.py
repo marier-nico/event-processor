@@ -10,6 +10,7 @@ from .dependencies import (
     get_pydantic_dependencies,
     get_scalar_value_dependencies,
 )
+from .error_handling_strategies import ErrorHandlingStrategies
 from .exceptions import (
     FilterError,
     InvocationError,
@@ -23,9 +24,14 @@ from .util import load_all_modules_in_package
 class EventProcessor:
     """A self-contained event processor."""
 
-    def __init__(self, invocation_strategy: InvocationStrategies = InvocationStrategies.FIRST_MATCH):
+    def __init__(
+        self,
+        invocation_strategy: InvocationStrategies = InvocationStrategies.FIRST_MATCH,
+        error_handling_strategy: ErrorHandlingStrategies = ErrorHandlingStrategies.BUBBLE,
+    ):
         self.processors: Dict[Tuple[Filter, int], List[Callable]] = {}
-        self.invocation_strategy = invocation_strategy
+        self.error_handling_strategy = error_handling_strategy.value()
+        self.invocation_strategy = invocation_strategy.value(self.error_handling_strategy)
 
     def add_subprocessors_in_package(self, package: ModuleType):
         """Add all the processors found in all modules of a package as subprocessors.
@@ -102,7 +108,7 @@ class EventProcessor:
                     matching.extend(processors)
 
         if matching:
-            return self.invocation_strategy.value.invoke(matching, event=Event(event), cache={})
+            return self.invocation_strategy.invoke(matching, event=Event(event), cache={})
         else:
             raise InvocationError(f"No matching processor for the event '{event}'")
 

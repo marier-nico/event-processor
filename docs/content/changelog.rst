@@ -1,3 +1,4 @@
+- v3.1.0: Add error handling strategies for processors.
 - v3.0.1: Improve the import path for results.
 - v3.0.0:
     - BREAKING CHANGE: The value returned by invoking a processor is now a Result.

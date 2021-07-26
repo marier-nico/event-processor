@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass
@@ -10,4 +10,11 @@ class Result:
     """
 
     processor_name: str
-    returned_value: Any
+    returned_value: Optional[Any] = None
+    raised_exception: Optional[Exception] = None
+
+    def has_value(self) -> bool:
+        return not self.has_exception()
+
+    def has_exception(self) -> bool:
+        return self.raised_exception is not None

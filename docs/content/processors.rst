@@ -27,6 +27,70 @@ The actual return value for the invocation depends on your invocation strategy. 
 returned from the invocation should be very obvious from the invocation strategy you're using. Essentially, if the
 strategy can call multiple processors, you get a list. If not, you get a single value.
 
+Error Handling
+--------------
+
+Handling errors with a lot of processors can get pretty repetitive, especially if you want to ignore several errors.
+This might happen when you want to run all matching processors, and you don't want an error in one processor to
+interrupt the whole processing.
+
+This is why you can use error handling strategies. Here's an example :
+
+.. testcode::
+
+    from event_processor import EventProcessor, ErrorHandlingStrategies
+    from event_processor.filters import Accept
+
+    event_processor = EventProcessor(error_handling_strategy=ErrorHandlingStrategies.CAPTURE)
+
+
+    @event_processor.processor(Accept())
+    def my_failing_processor():
+        raise RuntimeError("Oh no, I failed!")
+
+
+    result = event_processor.invoke({})
+
+    if result.has_exception:
+        print(str(result.raised_exception))
+
+.. testoutput::
+
+    Oh no, I failed!
+
+.. note::
+    Notice that no exception was raised by ``invoke``, and instead a ``Result`` was returned that contained the raised
+    exception.
+
+
+Here is a list of error handling strategies and what they do :
+
+Bubble (default)
+________________
+
+This strategy will bubble up exceptions to the caller of ``invoke``, this is just like if you called the processor
+yourself without the library, this way you can handle errors however you like.
+
+SpecificBubble
+______________
+
+This strategy will only bubble up *some* errors to the caller, so you can capture any exception *except* a few specific
+ones. This could be used if only critical errors should be bubbled up.
+
+Capture
+_______
+
+This strategy will capture errors that occur in processors and include them in the ``Result`` that is returned. This is
+especially useful when using the :ref:`All Matches` invocation strategy, because it will ensure all processors are run
+even if some of them raise exceptions.
+
+SpecificCapture
+_______________
+
+This strategy will only capture *some* errors and let other bubble up to the caller, so it's possible to ignore only a
+few specific errors instead of all of them.
+
+
 Multiple Event Processors
 -------------------------
 
