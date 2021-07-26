@@ -1,6 +1,6 @@
 import pytest
 
-from event_processor.error_handling_strategies import Bubble, Capture, SpecificBubble, SpecificCapture
+from src.event_processor.error_handling_strategies import Bubble, Capture, SpecificBubble, SpecificCapture
 
 
 def test_bubble_raises_exceptions_from_callables():

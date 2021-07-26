@@ -1,4 +1,5 @@
 """Contains the different invocation strategies for calling processors."""
+from functools import partial
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, Optional, List, Callable, Any, Union
@@ -35,7 +36,7 @@ class FirstMatch(InvocationStrategy):
     def invoke(self, matching: List[Callable], event: Optional[Event] = None, cache: Optional[Dict] = None) -> Result:
         return self.error_handling_strategy.invoke(
             callable_name=_get_processor_name(matching[0]),
-            callable_=call_with_injection(matching[0], event=event, cache=cache),
+            callable_=partial(call_with_injection, matching[0], event=event, cache=cache),
         )
 
 
@@ -50,7 +51,7 @@ class AllMatches(InvocationStrategy):
             results.append(
                 self.error_handling_strategy.invoke(
                     callable_name=_get_processor_name(match),
-                    callable_=call_with_injection(match, event=event, cache=cache),
+                    callable_=partial(call_with_injection, match, event=event, cache=cache),
                 )
             )
 
