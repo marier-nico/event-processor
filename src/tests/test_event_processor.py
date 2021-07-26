@@ -114,21 +114,21 @@ def test_invoke_calls_matching_processor(event_processor):
         nonlocal called
         called = True
 
-    event_processor.invoke({"a": 0})
+    event_processor.invoke({"a": 0},,
     assert called is True
 
 
 def test_invoke_raises_for_no_matching_processors(event_processor):
 
     with pytest.raises(InvocationError):
-        event_processor.invoke({"a": 0})
+        event_processor.invoke({"a": 0},,
 
 
 def test_invoke_returns_the_processor_return_value(event_processor):
     result_mock = Mock()
     event_processor.processors[Accept(), 0] = [lambda: result_mock]
 
-    result = event_processor.invoke({"a": 0})
+    result = event_processor.invoke({"a": 0},,
 
     assert result.returned_value is result_mock
 
@@ -142,7 +142,7 @@ def test_invoke_injects_event_into_processor(event_processor):
         nonlocal received_event
         received_event = ev == event
 
-    event_processor.invoke(event)
+    event_processor.invoke(event,,
 
     assert received_event is True
 
@@ -155,7 +155,7 @@ def test_invoke_injects_dependencies_into_processor(event_processor):
     def fn(dep: Mock = Depends(lambda: dependency_result)):
         dep.method()
 
-    event_processor.invoke(event)
+    event_processor.invoke(event,,
 
     dependency_result.method.assert_called_once()
 
@@ -175,7 +175,7 @@ def test_invoke_calls_highest_ranking_processor(event_processor):
         nonlocal called_b
         called_b = True
 
-    event_processor.invoke(event)
+    event_processor.invoke(event,,
 
     assert called_a is False
     assert called_b is True
@@ -195,7 +195,7 @@ def test_invoke_calls_negative_rank_as_fallback(event_processor):
         nonlocal called_b
         called_b = True
 
-    event_processor.invoke({"not-a": 0})
+    event_processor.invoke({"not-a": 0},,
 
     assert called_a is True
     assert called_b is False
@@ -230,8 +230,8 @@ def test_invoke_only_caches_for_each_invocation(event_processor):
     def fn_a(counter_dependency: int = Depends(my_dependency, cache=True)):
         return counter_dependency
 
-    result_1 = event_processor.invoke({})
-    result_2 = event_processor.invoke({})
+    result_1 = event_processor.invoke({},,
+    result_2 = event_processor.invoke({},,
 
     assert result_1.returned_value == 1
     assert result_2.returned_value == 2
