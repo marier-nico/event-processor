@@ -14,7 +14,7 @@ class Result:
     raised_exception: Optional[Exception] = None
 
     def has_value(self) -> bool:
-        return self.raised_exception is None
+        return not self.has_exception()
 
     def has_exception(self) -> bool:
         return self.raised_exception is not None
