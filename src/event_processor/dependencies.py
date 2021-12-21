@@ -1,7 +1,7 @@
 """Dependency injection and management facilities."""
 import inspect
 import typing
-from typing import Callable, Any, Optional, Dict, Tuple, List
+from typing import Callable, Any, Optional, Dict, Tuple, List, Type
 
 from .exceptions import DependencyError
 
@@ -140,7 +140,7 @@ def get_event_dependencies(callable_: Callable) -> List[str]:
     return [name for name, arg in signature.parameters.items() if arg.annotation is Event]
 
 
-def get_pydantic_dependencies(callable_: Callable) -> Dict[str, "BaseModel"]:
+def get_pydantic_dependencies(callable_: Callable) -> Dict[str, Type["BaseModel"]]:
     """Get the required models and their parameter names for a callable.
 
     :param callable_: The callable for which to get dependencies
