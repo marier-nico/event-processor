@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from collections import Callable
 from enum import Enum
-from typing import Type
+from typing import Type, Callable
 
 from .result import Result
 
