@@ -118,6 +118,29 @@ def test_invoke_calls_matching_processor(event_processor):
     assert called is True
 
 
+def test_invoke_calls_processors_once_per_invoke_with_multiple_matched_processors_and_all_matches_invocation_strategy():
+    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.ALL_MATCHES)
+    filter_a = Exists("a")
+    filter_b = Exists("b")
+    a_calls = 0
+    b_calls = 0
+
+    @event_processor.processor(filter_a)
+    def a_test():
+        nonlocal a_calls
+        a_calls += 1
+
+    @event_processor.processor(filter_b)
+    def b_test():
+        nonlocal b_calls
+        b_calls += 1
+
+    event_processor.invoke({"a": 0, "b": 0})
+    event_processor.invoke({"a": 0, "b": 0})
+    assert a_calls == 2
+    assert b_calls == 2
+
+
 def test_invoke_raises_for_no_matching_processors(event_processor):
 
     with pytest.raises(InvocationError):
