@@ -1,5 +1,6 @@
 """Contains the EventProcessor class."""
 import inspect
+from copy import copy
 from types import ModuleType
 from typing import Dict, Callable, Tuple, List, Union
 
@@ -103,7 +104,9 @@ class EventProcessor:
         for (filter_, rank), processors in self.processors.items():
             if filter_.matches(event):
                 if rank > highest_rank:
-                    matching, highest_rank = processors, rank
+                    # We take a copy here to avoid mutating the list of processors associated with a filter if we also
+                    # end up hitting the elif just below.
+                    matching, highest_rank = copy(processors), rank
                 elif rank == highest_rank:
                     matching.extend(processors)
 
