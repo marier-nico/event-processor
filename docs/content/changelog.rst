@@ -1,3 +1,6 @@
+- v3.1.3: Fix a bug with invocation when an event matches several filters.
+- v3.1.2: Fix an incorrect import.
+- v3.1.1: Relax pydantic requirements to help dependency management for downstream projects.
 - v3.1.0: Add error handling strategies for processors.
 - v3.0.1: Improve the import path for results.
 - v3.0.0:
