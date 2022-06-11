@@ -265,3 +265,6 @@ Thumbs.db #thumbnail cache on Windows
 
 .pants.d
 .pids
+
+.DS_Store
+

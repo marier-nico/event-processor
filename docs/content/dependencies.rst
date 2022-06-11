@@ -32,19 +32,19 @@ ______________
     from event_processor import EventProcessor, Depends
     from event_processor.filters import Accept
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     def get_my_value():
         return 42
 
 
-    @event_processor.processor(Accept())
+    @processor(Accept())
     def my_processor(my_value : int = Depends(get_my_value)):
         print(my_value)
 
 
-    event_processor.invoke({})
+    processor.invoke({})
 
 .. testoutput::
 
@@ -60,7 +60,7 @@ You can also nest dependencies as deep as you want to go, so you can easily re-u
     from event_processor import EventProcessor, Depends
     from event_processor.filters import Accept
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     def get_zero():
@@ -72,12 +72,12 @@ You can also nest dependencies as deep as you want to go, so you can easily re-u
         return zero + 1
 
 
-    @event_processor.processor(Accept())
+    @processor(Accept())
     def my_processor_with_caching(my_value : int = Depends(get_my_value)):
         print(my_value)
 
 
-    event_processor.invoke({})
+    processor.invoke({})
 
 .. testoutput::
 
@@ -94,7 +94,7 @@ classes as dependencies as well.
     from event_processor import EventProcessor, Depends, Event
     from event_processor.filters import Exists
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     class MyThing:
@@ -105,12 +105,12 @@ classes as dependencies as well.
             return self.username
 
 
-    @event_processor.processor(Exists("username"))
+    @processor(Exists("username"))
     def my_processor_with_caching(my_thing : MyThing = Depends(MyThing)):
         print(my_thing.get_username())
 
 
-    event_processor.invoke({"username": "someone"})
+    processor.invoke({"username": "someone"})
 
 .. testoutput::
 
@@ -133,15 +133,15 @@ Here's an example of a simple event dependency :
     from event_processor import EventProcessor, Event
     from event_processor.filters import Accept
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
-    @event_processor.processor(Accept())
+    @processor(Accept())
     def my_processor_with_caching(event: Event):
         print(event)
 
 
-    event_processor.invoke({"hello": "world"})
+    processor.invoke({"hello": "world"})
 
 .. testoutput::
 
@@ -154,7 +154,7 @@ And here's an example where a dependency depends on the event :
     from event_processor import EventProcessor, Event
     from event_processor.filters import Exists
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     # This function could also query a database (in which case it might depend
@@ -163,12 +163,12 @@ And here's an example where a dependency depends on the event :
         return event["email"]
 
 
-    @event_processor.processor(Exists("email"))
+    @processor(Exists("email"))
     def my_processor_with_caching(email: str = Depends(extract_email)):
         print(email)
 
 
-    event_processor.invoke({"email": "someone@example.com"})
+    processor.invoke({"email": "someone@example.com"})
 
 .. testoutput::
 
@@ -190,7 +190,7 @@ Here's a simple example to illustrate how the event might be parsed for use in a
     from event_processor.filters import Eq
     from pydantic import BaseModel
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     class CreateUserQuery(BaseModel):
@@ -198,13 +198,13 @@ Here's a simple example to illustrate how the event might be parsed for use in a
         password: str
 
 
-    @event_processor.processor(Eq("query", "create_user"))
+    @processor(Eq("query", "create_user"))
     def handle_user_creation(query: CreateUserQuery):
         print(query.email)
         print(query.password)
 
 
-    event_processor.invoke(
+    processor.invoke(
         {"query": "create_user", "email": "someone@example.com", "password": "hunter2"}
     )
 
@@ -237,15 +237,15 @@ Here's a very basic example :
     from event_processor import EventProcessor
     from event_processor.filters import Exists
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
-    @event_processor.processor(Exists("email"))
+    @processor(Exists("email"))
     def handle_user(email: str):
         print(email)
 
 
-    event_processor.invoke({"email": "someone@example.com"})
+    processor.invoke({"email": "someone@example.com"})
 
 .. testoutput::
 
@@ -260,18 +260,18 @@ Here's an example with a pydantic field type :
     from pydantic import ValidationError
     from pydantic.color import Color
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
-    @event_processor.processor(Exists("my_color"))
+    @processor(Exists("my_color"))
     def handle_user(my_color: Color):
         print(my_color.as_hex())
 
 
-    event_processor.invoke({"my_color": "white"})
+    processor.invoke({"my_color": "white"})
 
     try:
-        event_processor.invoke({"my_color": "not-a-color"})
+        processor.invoke({"my_color": "not-a-color"})
     except ValidationError as e:
         print(e.errors()[0]["msg"])
 

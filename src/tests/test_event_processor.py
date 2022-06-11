@@ -80,6 +80,16 @@ def test_processor_registers_a_processor(event_processor):
     assert len(event_processor.processors) == 1
 
 
+def test_callable_processor_registers_a_processor(event_processor):
+    filter_ = Exists("a")
+
+    @event_processor(filter_)
+    def a_test():
+        pass
+
+    assert len(event_processor.processors) == 1
+
+
 def test_processor_registers_multiple_processors_with_identical_filters(event_processor):
     filter_a = Accept()
     filter_b = Accept()

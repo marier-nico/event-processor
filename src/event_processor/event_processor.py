@@ -68,6 +68,14 @@ class EventProcessor:
             else:
                 self.processors[filter_with_rank] = processors
 
+    def __call__(self, event_filter: Filter, rank: int = 0):
+        """Register a new processor with the given filter and rank.
+
+        :param event_filter: The filter for which to match events
+        :param rank: This processor's rank (when there are multiple matches for a single event)
+        """
+        return self.processor(event_filter, rank)
+
     def processor(self, event_filter: Filter, rank: int = 0):
         """Register a new processor with the given filter and rank.
 
