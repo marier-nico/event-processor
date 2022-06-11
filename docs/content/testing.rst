@@ -13,7 +13,7 @@ Here's an example of how you might test a processor :
     from event_processor import EventProcessor, Event, Depends
     from event_processor.filters import Exists
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     class FakeDatabase:
@@ -41,7 +41,7 @@ Here's an example of how you might test a processor :
         return event["email"]
 
 
-    @event_processor.processor(Exists("email"))
+    @processor(Exists("email"))
     def user_is_admin(
         email: str = Depends(extract_email, cache=False),
         db_client: FakeDatabase = Depends(get_database),
@@ -50,8 +50,8 @@ Here's an example of how you might test a processor :
         return user_role == "admin"
 
 
-    print(event_processor.invoke({"email": "user@example.com"}).returned_value)
-    print(event_processor.invoke({"email": "admin@example.com"}).returned_value)
+    print(processor.invoke({"email": "user@example.com"}).returned_value)
+    print(processor.invoke({"email": "admin@example.com"}).returned_value)
 
 
     #################### Tests #####################

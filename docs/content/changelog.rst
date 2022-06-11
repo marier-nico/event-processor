@@ -1,3 +1,4 @@
+- v3.1.4: Simplify calling processors by making ``EventProcessor`` callable.
 - v3.1.3: Fix a bug with invocation when an event matches several filters.
 - v3.1.2: Fix an incorrect import.
 - v3.1.1: Relax pydantic requirements to help dependency management for downstream projects.

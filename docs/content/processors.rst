@@ -41,15 +41,15 @@ This is why you can use error handling strategies. Here's an example :
     from event_processor import EventProcessor, ErrorHandlingStrategies
     from event_processor.filters import Accept
 
-    event_processor = EventProcessor(error_handling_strategy=ErrorHandlingStrategies.CAPTURE)
+    processor = EventProcessor(error_handling_strategy=ErrorHandlingStrategies.CAPTURE)
 
 
-    @event_processor.processor(Accept())
+    @processor(Accept())
     def my_failing_processor():
         raise RuntimeError("Oh no, I failed!")
 
 
-    result = event_processor.invoke({})
+    result = processor.invoke({})
 
     if result.has_exception:
         print(str(result.raised_exception))
@@ -102,19 +102,19 @@ For example,
     from event_processor import EventProcessor, InvocationError
     from event_processor.filters import Accept
 
-    event_processor = EventProcessor()
-    other_event_processor = EventProcessor()
+    processor = EventProcessor()
+    other_processor = EventProcessor()
 
 
-    @event_processor.processor(Accept())
+    @processor(Accept())
     def my_processor():
         pass
 
 
-    event_processor.invoke({})  # This is fine, a processor exists for the event
+    processor.invoke({})  # This is fine, a processor exists for the event
 
     try:
-        other_event_processor.invoke({})  # This will raise
+        other_processor.invoke({})  # This will raise
     except InvocationError:
         print("Raised!")
 
@@ -145,7 +145,7 @@ sub-processors which get merged with a main processor.
     sub_processor = EventProcessor()
 
 
-    @sub_processor.processor(Accept())
+    @sub_processor(Accept())
     def my_processor():
         pass
 
@@ -160,7 +160,7 @@ sub-processors which get merged with a main processor.
     sub_processor = EventProcessor()
 
 
-    @sub_processor.processor(Accept())
+    @sub_processor(Accept())
     def my_processor():
         return "sub_processing!"
 
@@ -248,21 +248,21 @@ Here's an example of how you can use ranking :
     from event_processor import EventProcessor
     from event_processor.filters import Exists, Eq
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
-    @event_processor.processor(Exists("a"))
+    @processor(Exists("a"))
     def processor_a():
         print("Processor a!")
 
 
-    @event_processor.processor(Eq("a", "b"), rank=1)
+    @processor(Eq("a", "b"), rank=1)
     def processor_b():
         print("Processor b!")
 
 
-    event_processor.invoke({"a": "b"})
-    event_processor.invoke({"a": "not b"})
+    processor.invoke({"a": "b"})
+    processor.invoke({"a": "not b"})
 
 .. testoutput:: processors
 
@@ -314,20 +314,20 @@ To use a non-default invocation strategy, use the provided ``InvocationStrategie
     from event_processor import EventProcessor, InvocationStrategies
     from event_processor.filters import Exists, Eq
 
-    event_processor = EventProcessor(invocation_strategy=InvocationStrategies.ALL_MATCHES)
+    processor = EventProcessor(invocation_strategy=InvocationStrategies.ALL_MATCHES)
 
 
-    @event_processor.processor(Exists("a"))
+    @processor(Exists("a"))
     def processor_a():
         print("Processor a!")
 
 
-    @event_processor.processor(Eq("a", "b"))
+    @processor(Eq("a", "b"))
     def processor_b():
         print("Processor b!")
 
 
-    event_processor.invoke({"a": "b"})
+    processor.invoke({"a": "b"})
 
 .. testoutput::
 

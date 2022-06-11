@@ -55,21 +55,21 @@ a stub for the SSM client and assume that the ``admin_email`` parameter has a va
     from event_processor import EventProcessor, Event, Depends
     from event_processor.filters import Exists
 
-    event_processor = EventProcessor()
+    processor = EventProcessor()
 
 
     def get_ssm():
         return FakeSSMClient()
 
 
-    @event_processor.processor(Exists("user.email"))
+    @processor(Exists("user.email"))
     def user_is_admin(raw_event: Event, ssm_client: FakeSSMClient = Depends(get_ssm)) -> bool:
         ssm_response = ssm_client.get_parameter(Name="admin_email")
         admin_email = ssm_response["Parameter"]["Value"]
         return raw_event["user"]["email"] == admin_email
 
-    print("admin@example.com is admin:", event_processor.invoke({"user": {"email": "admin@example.com"}}).returned_value)
-    print("user@example.com is admin:", event_processor.invoke({"user": {"email": "user@example.com"}}).returned_value)
+    print("admin@example.com is admin:", processor.invoke({"user": {"email": "admin@example.com"}}).returned_value)
+    print("user@example.com is admin:", processor.invoke({"user": {"email": "user@example.com"}}).returned_value)
 
 .. testoutput:: core_concepts
 
