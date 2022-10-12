@@ -19,6 +19,9 @@ except ImportError:  # pragma: no cover
     from src.event_processor.util import py37_get_args as get_args
 
 
+DependsReturn = typing.TypeVar("DependsReturn")
+
+
 class Event(dict):
     """Type to wrap a dict to be used as a dependency."""
 
@@ -26,10 +29,17 @@ class Event(dict):
         super().__init__(dict_event)
 
 
-class Depends:
+# We need to use a function if we want mypy to give proper type hints, since our dependency should be
+# interpreted as the type returned by the user supplied callable and not as a `Depends` instance.
+def Depends(callable_: Callable[..., DependsReturn], cache: bool = True) -> DependsReturn:
+    """Create a dependency."""
+    return _Depends(callable_, cache)  # type: ignore
+
+
+class _Depends:
     """Class to designate a dependency"""
 
-    def __init__(self, callable_: Callable, cache: bool = True):
+    def __init__(self, callable_: Callable[..., DependsReturn], cache: bool = True):
         """Create a dependency.
 
         :param callable_: The callable on which there is a dependency
@@ -69,7 +79,7 @@ def call_with_injection(
 
 
 def resolve(
-    dependency: Depends, event: Optional[Event] = None, cache: Optional[dict] = None
+    dependency: _Depends, event: Optional[Event] = None, cache: Optional[dict] = None
 ) -> Tuple[Optional[Any], bool]:
     """Resolve a dependency into a value.
 
@@ -115,7 +125,7 @@ def resolve(
     return value, cacheable
 
 
-def get_required_dependencies(callable_: Callable) -> Dict[str, Depends]:
+def get_required_dependencies(callable_: Callable) -> Dict[str, _Depends]:
     """Get the required dependencies for a callable.
 
     :param callable_: The callable for which to get dependencies
@@ -125,7 +135,7 @@ def get_required_dependencies(callable_: Callable) -> Dict[str, Depends]:
     required_dependencies = {
         name: arg.default
         for name, arg in signature.parameters.items()
-        if arg.default is not inspect.Parameter.empty and isinstance(arg.default, Depends)
+        if arg.default is not inspect.Parameter.empty and isinstance(arg.default, _Depends)
     }
     return required_dependencies
 
