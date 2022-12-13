@@ -476,13 +476,22 @@ def test_dyn_filter_hash_is_resolver_hash():
     assert hash(filter_) == hash(dyn_filter)
 
 
-def test_dyn_filter_updates_event_when_inject_as_is_specified():
+def test_dyn_filter_updates_event_when_inject_as_is_specified_and_filter_matches():
     mock_event = {}
     filter_ = Dyn(lambda e: "my-value", inject_as="my-key")
 
     filter_.matches(mock_event)
 
     assert mock_event["my-key"] == "my-value"
+
+
+def test_dyn_filter_does_not_update_event_when_inject_as_is_specified_and_filter_does_not_match():
+    mock_event = {}
+    filter_ = Dyn(lambda e: False, inject_as="my-key")
+
+    filter_.matches(mock_event)
+
+    assert "my-key" not in mock_event
 
 
 def test_eq_filter_matches_when_resolvers_are_equal():

@@ -221,10 +221,11 @@ class Dyn(Filter):
         else:
             result = call_with_injection(self.resolver, event=Event(event), cache={})
 
-        if self.inject_as:
+        matches = bool(result)
+        if self.inject_as and matches:
             event[self.inject_as] = result
 
-        return bool(result)
+        return matches
 
     def __hash__(self):
         return hash(self.resolver)

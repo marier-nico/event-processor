@@ -223,7 +223,8 @@ be valid for a dependency (see :ref:`Dependencies` for details). For example :
     False
 
 Since the Dyn filter is basically a way to do anything you can't do with static filters, it also allows modifying the
-event before it gets passed to a processor function. For example :
+event before it gets passed to a processor function. Note that the event is only modified if the value returned by the
+dynamic function is truthy (i.e. event is unmodified if the filter doesn't match). For example :
 
 .. testcode::
 
