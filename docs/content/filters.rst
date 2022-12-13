@@ -222,6 +222,25 @@ be valid for a dependency (see :ref:`Dependencies` for details). For example :
     True
     False
 
+Since the Dyn filter is basically a way to do anything you can't do with static filters, it also allows modifying the
+event before it gets passed to a processor function. For example :
+
+.. testcode::
+
+    from event_processor import Depends, Event
+    from event_processor.filters import Dyn
+
+    my_event = {"a": "b"}
+    a_filter = Dyn(lambda e: "value", inject_as="modified-key")
+
+    a_filter.matches(my_event)
+
+    print(my_event)
+
+.. testoutput::
+
+    {'a': 'b', 'modified-key': 'value'}
+
 And
 ---
 

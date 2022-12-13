@@ -29,7 +29,7 @@ def build(c, docs=False):
 @task
 def test(c):
     c.run("pytest -v --cov=src/event_processor/ --cov-fail-under=100 --cov-report html src/tests")
-    c.run("cd docs && make doctest && cd ..")
+    c.run("make -C docs doctest")
 
 
 @task

@@ -1,6 +1,6 @@
 """Contains many different filters to conveniently filter through events."""
 from abc import ABC, abstractmethod
-from typing import Any, Union, Callable
+from typing import Any, Union, Callable, Optional
 
 from .dependencies import call_with_injection, Event
 from .exceptions import FilterError, NoValueError
@@ -197,6 +197,9 @@ class Geq(NumCmp):
 class Dyn(Filter):
     """Accept events based on a dynamic condition which is resolved by a callable.
 
+    This filter also allows dynamically changing the event by adding the returned value of the resolver to the event
+    under a user-supplied key. This will overwrite a previously existing key.
+
     Note that the equality check with this filter is a bit special. The filter will only be equal if the resolver is
     the same (two functions with the same code are not equal, they need to be the same object in memory).
 
@@ -205,17 +208,23 @@ class Dyn(Filter):
     strategies.
     """
 
-    def __init__(self, resolver: Callable):
+    def __init__(self, resolver: Callable, inject_as: Optional[str] = None):
         if not callable(resolver):
             raise FilterError("The resolver for a dyn filter must be callable")
 
         self.resolver = resolver
+        self.inject_as = inject_as
 
     def matches(self, event: dict) -> bool:
         if hasattr(self.resolver, "__name__") and self.resolver.__name__ == "<lambda>":
-            return bool(self.resolver(event))
+            result = self.resolver(event)
+        else:
+            result = call_with_injection(self.resolver, event=Event(event), cache={})
 
-        return bool(call_with_injection(self.resolver, event=Event(event), cache={}))
+        if self.inject_as:
+            event[self.inject_as] = result
+
+        return bool(result)
 
     def __hash__(self):
         return hash(self.resolver)
