@@ -1,3 +1,6 @@
+- v3.2.0: Allow ``Dyn`` filters to modify the event.
+- v3.1.6: Fix type hints with ``Depends``.
+- v3.1.5: Add py.typed file to support type hints.
 - v3.1.4: Simplify calling processors by making ``EventProcessor`` callable.
 - v3.1.3: Fix a bug with invocation when an event matches several filters.
 - v3.1.2: Fix an incorrect import.
