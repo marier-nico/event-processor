@@ -15,7 +15,7 @@ except ImportError:  # pragma: no cover
 try:
     from typing import get_args, get_origin  # type: ignore
 except ImportError:  # pragma: no cover
-    from src.event_processor.util import py37_get_origin as get_origin
+    from src.event_processor.util import py37_get_origin as get_origin  # type: ignore
     from src.event_processor.util import py37_get_args as get_args
 
 

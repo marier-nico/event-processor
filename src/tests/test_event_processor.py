@@ -107,7 +107,6 @@ def test_processor_registers_multiple_processors_with_identical_filters(event_pr
 
 
 def test_processor_raises_exception_when_the_processor_takes_invalid_params(event_processor):
-
     with pytest.raises(FilterError):
 
         @event_processor.processor(Accept())
@@ -152,7 +151,6 @@ def test_invoke_calls_processors_once_per_invoke_with_multiple_matched_processor
 
 
 def test_invoke_raises_for_no_matching_processors(event_processor):
-
     with pytest.raises(InvocationError):
         event_processor.invoke({"a": 0})
 

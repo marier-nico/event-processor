@@ -39,7 +39,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     install_requires=[],
-    extras_require={"pydantic": ["pydantic >= 1.8.2,< 2.0"]},
+    extras_require={"pydantic": ["pydantic >= 1.8.2,< 3.0"]},
     package_data={"": ["VERSION"], "event_processor": ["py.typed"]},
 
     # Other configurations
