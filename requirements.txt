@@ -1,7 +1,7 @@
 black
 invoke
 mypy
-pydantic==2.4.1
+pydantic==2.4.2
 pylama
 pytest
 pytest-cov
